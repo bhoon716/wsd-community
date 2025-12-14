@@ -1,0 +1,20 @@
+package wsd.community.common.response;
+
+import lombok.Getter;
+import wsd.community.common.error.ErrorCode;
+
+@Getter
+public class CustomException extends RuntimeException {
+
+    private final ErrorCode errorCode;
+    private String Detail;
+
+    public CustomException(ErrorCode errorCode) {
+        this.errorCode = errorCode;
+    }
+
+    public CustomException(ErrorCode errorCode, String detail) {
+        this.errorCode = errorCode;
+        this.Detail = detail;
+    }
+}
