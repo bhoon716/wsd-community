@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 @Getter
 @JsonInclude(Include.NON_NULL)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class ApiResponse<T> {
+public class Response<T> {
 
     private static final String SUCCESS_CODE = "SUCCESS";
 
@@ -19,29 +19,29 @@ public class ApiResponse<T> {
     private final String message;
     private final T data;
 
-    public static <T> ApiResponse<T> success(T data, String message) {
-        return new ApiResponse<>(
+    public static <T> Response<T> success(T data, String message) {
+        return new Response<>(
                 SUCCESS_CODE,
                 message,
                 data);
     }
 
-    private static <T> ApiResponse<T> noContentBody(String message) {
-        return new ApiResponse<>(
+    private static <T> Response<T> noContentBody(String message) {
+        return new Response<>(
                 SUCCESS_CODE,
                 message,
                 null);
     }
 
-    public static <T> ResponseEntity<ApiResponse<T>> ok(T data, String message) {
-        return ResponseEntity.ok(ApiResponse.success(data, message));
+    public static <T> ResponseEntity<Response<T>> ok(T data, String message) {
+        return ResponseEntity.ok(Response.success(data, message));
     }
 
-    public static <T> ResponseEntity<ApiResponse<T>> created(T data, URI location, String message) {
-        return ResponseEntity.created(location).body(ApiResponse.success(data, message));
+    public static <T> ResponseEntity<Response<T>> created(T data, URI location, String message) {
+        return ResponseEntity.created(location).body(Response.success(data, message));
     }
 
-    public static <T> ResponseEntity<ApiResponse<T>> noContent(String message) {
-        return ResponseEntity.ok(ApiResponse.noContentBody(message));
+    public static <T> ResponseEntity<Response<T>> noContent(String message) {
+        return ResponseEntity.ok(Response.noContentBody(message));
     }
 }
