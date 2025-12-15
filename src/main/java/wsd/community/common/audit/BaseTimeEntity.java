@@ -1,4 +1,4 @@
-package wsd.bookstore.common.audit;
+package wsd.community.common.audit;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
