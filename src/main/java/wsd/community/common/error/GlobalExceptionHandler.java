@@ -12,6 +12,8 @@ import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+
 import wsd.community.common.response.CustomException;
 import wsd.community.common.response.ErrorResponse;
 
@@ -90,6 +92,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(error.getStatus())
                 .body(ErrorResponse.of(error, path, details));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResourceFoundException(
+            HttpServletRequest request, NoResourceFoundException e) {
+        log.warn("[WARN] No resource found: path={}", request.getRequestURI());
+        return buildResponse(ErrorCode.NOT_FOUND, request.getRequestURI(), null);
     }
 
     private Map<String, Object> detailOrNull(String detailMessage) {

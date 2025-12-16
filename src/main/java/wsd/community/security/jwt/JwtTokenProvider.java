@@ -7,11 +7,14 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 import wsd.community.domain.user.entity.UserRole;
+import wsd.community.security.config.SecurityConstant;
 
 @Slf4j
 @Component
@@ -34,22 +37,36 @@ public class JwtTokenProvider {
     }
 
     public String generateAccess(Long userId, String email, UserRole role) {
+        String jti = UUID.randomUUID().toString();
+        long now = System.currentTimeMillis();
+        Date issuedAt = new Date(now);
+        Date expiredAt = new Date(now + accessTokenExpiration);
+
         return Jwts.builder()
+                .id(jti)
                 .subject(email)
-                .claim("userId", userId)
-                .claim("role", role.name())
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
+                .claim(SecurityConstant.CLAIM_USER_ID, userId)
+                .claim(SecurityConstant.CLAIM_ROLE, role.name())
+                .claim(SecurityConstant.CLAIM_TYPE, SecurityConstant.ACCESS_TOKEN_TYPE)
+                .issuedAt(issuedAt)
+                .expiration(expiredAt)
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();
     }
 
     public String generateRefresh(Long userId) {
+        String jti = UUID.randomUUID().toString();
+        long now = System.currentTimeMillis();
+        Date issuedAt = new Date(now);
+        Date expiredAt = new Date(now + refreshTokenExpiration);
+
         return Jwts.builder()
+                .id(jti)
                 .subject(String.valueOf(userId))
-                .claim("userId", userId)
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
+                .claim(SecurityConstant.CLAIM_USER_ID, userId)
+                .claim(SecurityConstant.CLAIM_TYPE, SecurityConstant.REFRESH_TOKEN_TYPE)
+                .issuedAt(issuedAt)
+                .expiration(expiredAt)
                 .signWith(key, Jwts.SIG.HS256)
                 .compact();
     }
@@ -59,9 +76,9 @@ public class JwtTokenProvider {
             Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
             return true;
         } catch (ExpiredJwtException e) {
-            log.info("Expired JWT token.");
+            log.info("만료된 토큰: {}", e.getMessage());
         } catch (Exception e) {
-            log.info("Invalid JWT token.");
+            log.info("유효하지 않은 토큰: {}", e.getMessage());
         }
         return false;
     }
@@ -72,7 +89,7 @@ public class JwtTokenProvider {
 
     public Long getUserId(String token) {
         Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
-        return claims.get("userId", Long.class);
+        return claims.get(SecurityConstant.CLAIM_USER_ID, Long.class);
     }
 
     public long getExpiration(String token) {

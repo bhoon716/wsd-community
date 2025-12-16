@@ -1,9 +1,8 @@
-package wsd.community.security.jwt;
+package wsd.community.security.config;
 
-public class JwtConstant {
+public class SecurityConstant {
 
-    public static final String REDIS_RT_PREFIX = "RT:";
-    public static final String REDIS_BL_PREFIX = "BL:";
+    public static final String CLAIM_USER_ID = "userId";
     public static final String CLAIM_EMAIL = "email";
     public static final String CLAIM_ROLE = "role";
     public static final String CLAIM_TYPE = "type";
@@ -11,7 +10,9 @@ public class JwtConstant {
     public static final String REFRESH_TOKEN_TYPE = "refresh";
     public static final String LOGOUT_VALUE = "logout";
     public static final String TOKEN_PREFIX = "Bearer ";
+    public static final String REFRESH_TOKEN = "refresh_token";
+    public static final String AUTHORIZATION = "Authorization";
 
-    private JwtConstant() {
+    private SecurityConstant() {
     }
 }

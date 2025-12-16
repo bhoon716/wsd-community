@@ -15,6 +15,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import wsd.community.security.auth.CustomUserDetailsService;
+import wsd.community.security.config.SecurityConstant;
 
 @Slf4j
 @Component
@@ -32,20 +33,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if (authHeader == null || !authHeader.startsWith(JwtConstant.TOKEN_PREFIX)) {
+        if (authHeader == null || !authHeader.startsWith(SecurityConstant.TOKEN_PREFIX)) {
             filterChain.doFilter(request, response);
             return;
         }
-        String token = authHeader.substring(JwtConstant.TOKEN_PREFIX.length());
+        String token = authHeader.substring(SecurityConstant.TOKEN_PREFIX.length());
 
         if (!jwtTokenProvider.validateToken(token)) {
-            log.info("토큰 검증 실패: {}", token);
             filterChain.doFilter(request, response);
             return;
         }
 
         if (SecurityContextHolder.getContext().getAuthentication() != null) {
-            log.info("이미 인증 정보 존재");
             filterChain.doFilter(request, response);
             return;
         }

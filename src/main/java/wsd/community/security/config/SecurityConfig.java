@@ -23,6 +23,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import wsd.community.security.handler.CustomAccessDeniedHandler;
 import wsd.community.security.handler.CustomAuthenticationEntryPoint;
 import wsd.community.security.jwt.JwtAuthenticationFilter;
+import wsd.community.security.oauth.OAuth2FailureHandler;
+import wsd.community.security.oauth.CustomOAuth2UserService;
+import wsd.community.security.oauth.OAuth2SuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -37,15 +40,17 @@ public class SecurityConfig {
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
                         "/swagger-ui.html",
-                        "/h2-console/**"
+                        "/h2-console/**",
+                        "/error",
+                        "/favicon.ico",
+                        "/oauth2/**",
+                        "/login/**"
         };
 
         private static final String[] PERMIT_GET_ENDPOINTS = new String[] {
         };
 
         private static final String[] PERMIT_POST_ENDPOINTS = new String[] {
-                        "/api/auth/login",
-                        "/api/auth/signup",
                         "/api/auth/reissue",
                         "/api/auth/logout"
         };
@@ -56,6 +61,9 @@ public class SecurityConfig {
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
         private final CustomAccessDeniedHandler customAccessDeniedHandler;
         private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+        private final CustomOAuth2UserService customOAuth2UserService;
+        private final OAuth2SuccessHandler oAuth2SuccessHandler;
+        private final OAuth2FailureHandler oAuth2FailureHandler;
 
         @Bean
         public PasswordEncoder passwordEncoder() {
@@ -80,7 +88,12 @@ public class SecurityConfig {
                                                 .accessDeniedHandler(customAccessDeniedHandler)
                                                 .authenticationEntryPoint(customAuthenticationEntryPoint))
                                 .headers(headers -> headers.frameOptions(FrameOptionsConfig::sameOrigin))
-                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                                .oauth2Login(oauth2 -> oauth2
+                                                .userInfoEndpoint(userInfo -> userInfo
+                                                                .userService(customOAuth2UserService))
+                                                .successHandler(oAuth2SuccessHandler)
+                                                .failureHandler(oAuth2FailureHandler));
 
                 return http.build();
         }
