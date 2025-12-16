@@ -1,4 +1,4 @@
-package wsd.community.common.redis;
+package wsd.community.redis;
 
 import java.time.Duration;
 

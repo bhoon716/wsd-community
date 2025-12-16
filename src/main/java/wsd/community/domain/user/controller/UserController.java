@@ -1,18 +1,15 @@
 package wsd.community.domain.user.controller;
 
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import wsd.community.common.response.Response;
 import wsd.community.security.auth.CustomUserDetails;
-import wsd.community.domain.user.request.PasswordUpdateRequest;
+
 import wsd.community.domain.user.response.UserResponse;
 import wsd.community.domain.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,22 +43,6 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         UserResponse response = userService.getUser(userDetails.getUserId());
         return Response.ok(response, "내 정보 조회 성공");
-    }
-
-    @PatchMapping("/me/password")
-    @Operation(summary = "비밀번호 변경", description = "비밀번호를 변경합니다.")
-    @ApiResponse(responseCode = "200", description = "변경 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "비밀번호 변경 성공 예시", value = """
-            {
-                "isSuccess": true,
-                "message": "비밀번호 변경 성공",
-                "payload": null
-            }
-            """)))
-    public ResponseEntity<Response<Void>> updateMyPassword(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody PasswordUpdateRequest request) {
-        userService.updatePassword(userDetails.getUserId(), request.getPassword());
-        return Response.ok(null, "비밀번호 변경 성공");
     }
 
     @DeleteMapping("/me")
