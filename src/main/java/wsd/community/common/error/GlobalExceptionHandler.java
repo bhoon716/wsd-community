@@ -42,7 +42,7 @@ public class GlobalExceptionHandler {
         e.getBindingResult().getFieldErrors()
                 .forEach(error -> details.put(error.getField(), error.getDefaultMessage()));
 
-        log.warn("[WARN] Validation failed: path={}, details={}", request.getRequestURI(), details);
+        log.warn("[WARN] 유효성 검증 실패: path={}, details={}", request.getRequestURI(), details);
 
         return buildResponse(ErrorCode.INVALID_INPUT, request.getRequestURI(), details);
     }
@@ -51,7 +51,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleExpiredJwtException(
             HttpServletRequest request, ExpiredJwtException e) {
 
-        log.warn("[WARN] Expired JWT: path={}, message={}", request.getRequestURI(), e.getMessage());
+        log.warn("[WARN] 만료된 JWT: path={}, message={}", request.getRequestURI(), e.getMessage());
 
         Map<String, Object> details = detailOrNull("만료된 토큰입니다.");
         return buildResponse(ErrorCode.INVALID_TOKEN, request.getRequestURI(), details);
@@ -61,7 +61,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleJwtException(
             HttpServletRequest request, JwtException e) {
 
-        log.warn("[WARN] Invalid JWT: path={}, message={}", request.getRequestURI(), e.getMessage());
+        log.warn("[WARN] 유효하지 않은 JWT: path={}, message={}", request.getRequestURI(), e.getMessage());
 
         Map<String, Object> details = detailOrNull("유효하지 않은 토큰입니다.");
         return buildResponse(ErrorCode.INVALID_TOKEN, request.getRequestURI(), details);
@@ -71,7 +71,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAccessDenied(
             HttpServletRequest request, RuntimeException e) {
 
-        log.warn("[WARN] Access denied: path={}, message={}", request.getRequestURI(), e.getMessage());
+        log.warn("[WARN] 접근 거부됨: path={}, message={}", request.getRequestURI(), e.getMessage());
 
         return buildResponse(ErrorCode.FORBIDDEN, request.getRequestURI(), null);
     }
@@ -80,7 +80,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleException(
             HttpServletRequest request, Exception e) {
 
-        log.error("[ERROR] Unhandled exception: path={}, exception={}",
+        log.error("[ERROR] 예기치 못한 오류: path={}, exception={}",
                 request.getRequestURI(), e.getClass().getSimpleName(), e);
 
         Map<String, Object> details = detailOrNull(e.getMessage());
@@ -97,7 +97,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErrorResponse> handleNoResourceFoundException(
             HttpServletRequest request, NoResourceFoundException e) {
-        log.warn("[WARN] No resource found: path={}", request.getRequestURI());
+        log.warn("[WARN] 리소스를 찾을 수 없음: path={}", request.getRequestURI());
         return buildResponse(ErrorCode.NOT_FOUND, request.getRequestURI(), null);
     }
 
