@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import wsd.community.common.response.Response;
+import wsd.community.domain.user.request.FirebaseLoginRequest;
 import wsd.community.domain.user.request.ReissueRequest;
 import wsd.community.domain.user.response.LoginResponse;
 import wsd.community.domain.user.response.UserResponse;
@@ -20,6 +21,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequiredArgsConstructor
@@ -49,6 +52,30 @@ public class AuthController {
         authService.logout(accessToken.substring(BEARER_PREFIX.length()));
         removeRefreshTokenCookie(httpServletResponse);
         return ResponseEntity.ok(Response.success(null, "로그아웃 성공"));
+    }
+
+    @PostMapping("/firebase")
+    @Operation(summary = "Firebase 로그인", description = "Firebase ID Token을 사용하여 로그인합니다.")
+    @ApiResponse(responseCode = "200", description = "로그인 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "로그인 성공 예시", value = """
+            {
+                "isSuccess": true,
+                "message": "로그인 성공",
+                "payload": {
+                    "userId": 1,
+                    "email": "user@example.com",
+                    "name": "홍길동"
+                }
+            }
+            """)))
+    public ResponseEntity<Response<UserResponse>> loginWithFirebase(
+            @RequestBody @Valid FirebaseLoginRequest request,
+            HttpServletResponse httpServletResponse) {
+        LoginResponse response = authService.loginWithFirebase(request.getIdToken());
+
+        setAccessTokenHeader(httpServletResponse, response.getAccessToken());
+        addRefreshTokenCookie(httpServletResponse, response.getRefreshToken());
+
+        return ResponseEntity.ok(Response.success(response.getUser(), "로그인 성공"));
     }
 
     @PostMapping("/reissue")

@@ -52,7 +52,8 @@ public class SecurityConfig {
 
         private static final String[] PERMIT_POST_ENDPOINTS = new String[] {
                         "/api/auth/reissue",
-                        "/api/auth/logout"
+                        "/api/auth/logout",
+                        "/api/auth/firebase"
         };
 
         @Value("${app.cors.allowed-origins}")

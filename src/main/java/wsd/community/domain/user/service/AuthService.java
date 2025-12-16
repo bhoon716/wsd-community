@@ -17,7 +17,9 @@ import wsd.community.domain.user.repository.UserRepository;
 import wsd.community.domain.user.request.ReissueRequest;
 import wsd.community.domain.user.response.LoginResponse;
 import wsd.community.domain.user.response.UserResponse;
+import wsd.community.domain.user.entity.UserRole;
 import wsd.community.redis.RedisService;
+import com.google.firebase.auth.FirebaseToken;
 
 @Slf4j
 @Service
@@ -28,6 +30,29 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisService redisService;
+    private final FirebaseService firebaseService;
+
+    public LoginResponse loginWithFirebase(String idToken) {
+        FirebaseToken decodedToken = firebaseService.verifyToken(idToken);
+        String email = decodedToken.getEmail();
+        String uid = decodedToken.getUid();
+        String name = decodedToken.getName() != null ? decodedToken.getName() : email.split("@")[0];
+
+        User user = userRepository.findByEmail(email)
+                .map(entity -> {
+                    entity.updateProfile(name);
+                    return entity;
+                })
+                .orElseGet(() -> userRepository.save(User.builder()
+                        .email(email)
+                        .name(name)
+                        .role(UserRole.USER)
+                        .provider("firebase")
+                        .providerId(uid)
+                        .build()));
+
+        return generateLoginResponse(user);
+    }
 
     public void logout(String accessToken) {
         String email = jwtTokenProvider.getEmail(accessToken);
