@@ -15,13 +15,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
-
 import wsd.community.domain.user.entity.User;
 import wsd.community.domain.user.repository.UserRepository;
 import wsd.community.domain.user.request.ReissueRequest;
 import wsd.community.domain.user.response.LoginResponse;
 import wsd.community.redis.RedisService;
 import wsd.community.security.jwt.JwtTokenProvider;
+import com.google.firebase.auth.FirebaseAuth;
 
 @Transactional
 @SpringBootTest
@@ -39,6 +39,9 @@ class AuthServiceTest {
 
     @MockitoBean
     private RedisService redisService;
+
+    @MockitoBean
+    private FirebaseAuth firebaseAuth;
 
     @AfterEach
     void tearDown() {
