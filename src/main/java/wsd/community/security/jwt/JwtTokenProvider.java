@@ -47,6 +47,7 @@ public class JwtTokenProvider {
     public String generateRefresh(Long userId) {
         return Jwts.builder()
                 .subject(String.valueOf(userId))
+                .claim("userId", userId)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
                 .signWith(key, Jwts.SIG.HS256)

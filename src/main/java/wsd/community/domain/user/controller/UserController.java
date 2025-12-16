@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,7 +31,7 @@ public class UserController {
 
     @GetMapping("/me")
     @Operation(summary = "내 정보 조회", description = "현재 로그인한 사용자의 프로필을 조회합니다.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "내 정보 조회 성공 예시", value = """
+    @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "내 정보 조회 성공 예시", value = """
             {
                 "isSuccess": true,
                 "message": "내 정보 조회 성공",
@@ -49,7 +50,7 @@ public class UserController {
 
     @PatchMapping("/me/password")
     @Operation(summary = "비밀번호 변경", description = "비밀번호를 변경합니다.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "변경 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "비밀번호 변경 성공 예시", value = """
+    @ApiResponse(responseCode = "200", description = "변경 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "비밀번호 변경 성공 예시", value = """
             {
                 "isSuccess": true,
                 "message": "비밀번호 변경 성공",
@@ -65,7 +66,7 @@ public class UserController {
 
     @DeleteMapping("/me")
     @Operation(summary = "회원 탈퇴", description = "회원 탈퇴를 처리합니다.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "탈퇴 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "회원 탈퇴 성공 예시", value = """
+    @ApiResponse(responseCode = "204", description = "탈퇴 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "회원 탈퇴 성공 예시", value = """
             {
                 "isSuccess": true,
                 "message": "회원 탈퇴 성공",
