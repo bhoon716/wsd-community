@@ -32,8 +32,37 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
     public Page<PostSummaryResponse> search(PostSearchCondition condition, Pageable pageable) {
         BooleanExpression[] where = {
                 typeEq(condition.type()),
-                titleOrContentContains(condition.keyword())
+                titleContains(condition.keyword())
         };
+
+        List<PostSummaryResponse> content = queryFactory
+                .select(new QPostSummaryResponse(
+                        post.id,
+                        post.title,
+                        post.type,
+                        post.createdAt,
+                        post.updatedAt,
+                        post.user.name,
+                        post.likeCount))
+                .from(post)
+                .leftJoin(post.user, user)
+                .where(where)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .orderBy(getOrderSpecifiers(pageable))
+                .fetch();
+
+        JPAQuery<Long> countQuery = queryFactory
+                .select(post.count())
+                .from(post)
+                .where(where);
+
+        return PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
+    }
+
+    @Override
+    public Page<PostSummaryResponse> findMyPosts(Long userId, Pageable pageable) {
+        BooleanExpression where = writerIdEq(userId);
 
         List<PostSummaryResponse> content = queryFactory
                 .select(new QPostSummaryResponse(
@@ -89,7 +118,11 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
         return type != null ? post.type.eq(type) : null;
     }
 
-    private BooleanExpression titleOrContentContains(String keyword) {
-        return StringUtils.hasText(keyword) ? post.title.contains(keyword).or(post.content.contains(keyword)) : null;
+    private BooleanExpression titleContains(String keyword) {
+        return StringUtils.hasText(keyword) ? post.title.contains(keyword) : null;
+    }
+
+    private BooleanExpression writerIdEq(Long id) {
+        return id != null ? post.user.id.eq(id) : null;
     }
 }

@@ -47,6 +47,11 @@ public class PostService {
         return postRepository.search(condition, pageable);
     }
 
+    @Transactional(readOnly = true)
+    public Page<PostSummaryResponse> getMyPosts(Long userId, Pageable pageable) {
+        return postRepository.findMyPosts(userId, pageable);
+    }
+
     @Transactional
     public Long createPost(Long userId, PostCreateRequest request) {
         User user = userRepository.findById(userId)

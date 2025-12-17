@@ -8,4 +8,6 @@ import wsd.community.domain.post.response.PostSummaryResponse;
 public interface PostRepositoryCustom {
 
     Page<PostSummaryResponse> search(PostSearchCondition condition, Pageable pageable);
+
+    Page<PostSummaryResponse> findMyPosts(Long userId, Pageable pageable);
 }

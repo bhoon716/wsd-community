@@ -100,6 +100,67 @@ public class PostController {
         return Response.ok(response, "게시글 목록 조회 성공");
     }
 
+    @GetMapping("/my")
+    @Operation(summary = "내 게시글 목록 조회", description = "현재 로그인한 사용자가 작성한 게시글 목록을 페이징하여 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "내 게시글 목록 조회 성공 예시", value = """
+            {
+                "code": "SUCCESS",
+                "message": "내 게시글 목록 조회 성공",
+                "data": {
+                    "content": [
+                        {
+                            "id": 1,
+                            "title": "내 게시글 제목 1",
+                            "type": "GENERAL",
+                            "createdAt": "2024-01-01T12:00:00",
+                            "updatedAt": "2024-01-01T12:00:00",
+                            "writerName": "홍길동"
+                        },
+                        {
+                            "id": 2,
+                            "title": "내 게시글 제목 2",
+                            "type": "QNA",
+                            "createdAt": "2024-01-02T15:00:00",
+                            "updatedAt": "2024-01-02T15:00:00",
+                            "writerName": "홍길동"
+                        }
+                    ],
+                    "pageable": {
+                        "sort": {
+                            "empty": false,
+                            "sorted": true,
+                            "unsorted": false
+                        },
+                        "offset": 0,
+                        "pageNumber": 0,
+                        "pageSize": 20,
+                        "paged": true,
+                        "unpaged": false
+                    },
+                    "last": true,
+                    "totalElements": 2,
+                    "totalPages": 1,
+                    "size": 20,
+                    "number": 0,
+                    "sort": {
+                        "empty": false,
+                        "sorted": true,
+                        "unsorted": false
+                    },
+                    "first": true,
+                    "numberOfElements": 2,
+                    "empty": false
+                }
+            }
+            """)))
+    public ResponseEntity<Response<Page<PostSummaryResponse>>> getMyPosts(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        Page<PostSummaryResponse> response = postService.getMyPosts(userDetails.getUserId(), pageable);
+        return Response.ok(response, "내 게시글 목록 조회 성공");
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "게시글 상세 조회", description = "게시글의 상세 정보를 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "게시글 상세 조회 성공 예시", value = """
