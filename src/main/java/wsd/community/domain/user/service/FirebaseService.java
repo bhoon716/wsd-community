@@ -6,8 +6,9 @@ import com.google.firebase.auth.FirebaseToken;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import wsd.community.common.error.CustomException;
 import wsd.community.common.error.ErrorCode;
-import wsd.community.common.response.CustomException;
 
 @Slf4j
 @Service

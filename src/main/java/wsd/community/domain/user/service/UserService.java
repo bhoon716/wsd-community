@@ -4,7 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import wsd.community.common.response.CustomException;
+
+import wsd.community.common.error.CustomException;
 import wsd.community.common.error.ErrorCode;
 import wsd.community.domain.user.entity.User;
 import wsd.community.domain.user.repository.UserRepository;

@@ -1,7 +1,6 @@
-package wsd.community.common.response;
+package wsd.community.common.error;
 
 import lombok.Getter;
-import wsd.community.common.error.ErrorCode;
 
 @Getter
 public class CustomException extends RuntimeException {

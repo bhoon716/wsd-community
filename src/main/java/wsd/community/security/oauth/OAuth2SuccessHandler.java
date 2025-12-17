@@ -13,8 +13,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+
+import wsd.community.common.error.CustomException;
 import wsd.community.common.error.ErrorCode;
-import wsd.community.common.response.CustomException;
 import wsd.community.domain.user.entity.User;
 import wsd.community.domain.user.repository.UserRepository;
 import wsd.community.redis.RedisConstant;
