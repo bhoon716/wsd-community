@@ -1,0 +1,22 @@
+package wsd.community.domain.comment.response;
+
+import java.time.LocalDateTime;
+import wsd.community.domain.comment.entity.Comment;
+
+public record CommentResponse(
+        Long id,
+        String content,
+        String writerName,
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        Long likeCount) {
+    public static CommentResponse from(Comment comment) {
+        return new CommentResponse(
+                comment.getId(),
+                comment.getContent(),
+                comment.getUser().getName(),
+                comment.getCreatedAt(),
+                comment.getUpdatedAt(),
+                comment.getLikeCount());
+    }
+}
