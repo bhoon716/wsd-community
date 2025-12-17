@@ -113,7 +113,18 @@ public class PostController {
                     "type": "GENERAL",
                     "createdAt": "2024-01-01T12:00:00",
                     "updatedAt": "2024-01-01T12:00:00",
-                    "writerName": "홍길동"
+                    "writerName": "홍길동",
+                    "likeCount": 10,
+                    "comments": [
+                        {
+                            "id": 1,
+                            "content": "댓글 내용",
+                            "writerName": "댓글 작성자",
+                            "createdAt": "2024-01-01T12:30:00",
+                            "updatedAt": "2024-01-01T12:30:00",
+                            "likeCount": 5
+                        }
+                    ]
                 }
             }
             """)))
@@ -168,7 +179,7 @@ public class PostController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long id) {
         postService.deletePost(userDetails.getUserId(), id);
-        return Response.ok(null, "게시글이 성공적으로 삭제되었습니다.");
+        return Response.noContent("게시글이 성공적으로 삭제되었습니다.");
     }
 
     @PostMapping("/{id}/likes")
@@ -184,6 +195,6 @@ public class PostController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long id) {
         postService.toggleLike(userDetails.getUserId(), id);
-        return Response.ok(null, "게시글 좋아요 상태가 변경되었습니다.");
+        return Response.noContent("게시글 좋아요 상태가 변경되었습니다.");
     }
 }

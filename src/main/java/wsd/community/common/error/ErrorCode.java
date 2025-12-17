@@ -19,9 +19,15 @@ public enum ErrorCode {
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "A003", "유효하지 않은 토큰입니다."),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "A004", "만료된 토큰입니다."),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "A005", "리프레시 토큰을 찾을 수 없습니다."),
+    NOT_ADMIN(HttpStatus.FORBIDDEN, "A006", "관리자 권한이 필요합니다."),
 
     // Post
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "게시글을 찾을 수 없습니다."),
+    NOT_POST_WRITER(HttpStatus.FORBIDDEN, "P002", "게시글 작성자가 아닙니다."),
+
+    // Comment
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "C001", "댓글을 찾을 수 없습니다."),
+    NOT_COMMENT_WRITER(HttpStatus.FORBIDDEN, "C002", "댓글 작성자가 아닙니다."),
 
     // Global
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G001", "내부 서버 오류가 발생했습니다."),

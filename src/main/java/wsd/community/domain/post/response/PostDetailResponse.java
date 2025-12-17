@@ -1,6 +1,8 @@
 package wsd.community.domain.post.response;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import wsd.community.domain.comment.response.CommentResponse;
 import wsd.community.domain.post.entity.Post;
 import wsd.community.domain.post.entity.PostType;
 
@@ -12,8 +14,9 @@ public record PostDetailResponse(
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
         String writerName,
-        Long likeCount) {
-    public static PostDetailResponse from(Post post) {
+        Long likeCount,
+        List<CommentResponse> comments) {
+    public static PostDetailResponse from(Post post, List<CommentResponse> comments) {
         return new PostDetailResponse(
                 post.getId(),
                 post.getTitle(),
@@ -22,6 +25,7 @@ public record PostDetailResponse(
                 post.getCreatedAt(),
                 post.getUpdatedAt(),
                 post.getUser().getName(),
-                post.getLikeCount());
+                post.getLikeCount(),
+                comments);
     }
 }
