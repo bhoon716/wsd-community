@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import wsd.community.common.response.Response;
+import wsd.community.common.response.CommonResponse;
 import wsd.community.domain.user.request.FirebaseLoginRequest;
 import wsd.community.domain.user.request.ReissueRequest;
 import wsd.community.domain.user.response.LoginResponse;
@@ -46,12 +46,12 @@ public class AuthController {
                 "payload": null
             }
             """)))
-    public ResponseEntity<Response<Void>> logout(
+    public ResponseEntity<CommonResponse<Void>> logout(
             @RequestHeader(AUTHORIZATION_HEADER) String accessToken,
             HttpServletResponse httpServletResponse) {
         authService.logout(accessToken.substring(BEARER_PREFIX.length()));
         removeRefreshTokenCookie(httpServletResponse);
-        return ResponseEntity.ok(Response.success(null, "로그아웃 성공"));
+        return ResponseEntity.ok(CommonResponse.success(null, "로그아웃 성공"));
     }
 
     @PostMapping("/firebase")
@@ -67,7 +67,7 @@ public class AuthController {
                 }
             }
             """)))
-    public ResponseEntity<Response<UserResponse>> loginWithFirebase(
+    public ResponseEntity<CommonResponse<UserResponse>> loginWithFirebase(
             @RequestBody @Valid FirebaseLoginRequest request,
             HttpServletResponse httpServletResponse) {
         LoginResponse response = authService.loginWithFirebase(request.getIdToken());
@@ -75,7 +75,7 @@ public class AuthController {
         setAccessTokenHeader(httpServletResponse, response.getAccessToken());
         addRefreshTokenCookie(httpServletResponse, response.getRefreshToken());
 
-        return ResponseEntity.ok(Response.success(response.getUser(), "로그인 성공"));
+        return ResponseEntity.ok(CommonResponse.success(response.getUser(), "로그인 성공"));
     }
 
     @PostMapping("/reissue")
@@ -91,7 +91,7 @@ public class AuthController {
                 }
             }
             """)))
-    public ResponseEntity<Response<UserResponse>> reissue(
+    public ResponseEntity<CommonResponse<UserResponse>> reissue(
             @CookieValue(REFRESH_TOKEN_COOKIE_NAME) String refreshToken,
             HttpServletResponse httpServletResponse) {
         LoginResponse response = authService.reissue(new ReissueRequest(refreshToken));
@@ -99,7 +99,7 @@ public class AuthController {
         setAccessTokenHeader(httpServletResponse, response.getAccessToken());
         addRefreshTokenCookie(httpServletResponse, response.getRefreshToken());
 
-        return ResponseEntity.ok(Response.success(response.getUser(), "토큰 재발급 성공"));
+        return ResponseEntity.ok(CommonResponse.success(response.getUser(), "토큰 재발급 성공"));
     }
 
     private void setAccessTokenHeader(HttpServletResponse response, String accessToken) {

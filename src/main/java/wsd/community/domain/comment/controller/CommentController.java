@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import wsd.community.common.response.Response;
+import wsd.community.common.response.CommonResponse;
 import wsd.community.domain.comment.request.CommentCreateRequest;
 import wsd.community.domain.comment.request.CommentUpdateRequest;
 import wsd.community.domain.comment.response.CommentResponse;
@@ -39,7 +39,7 @@ public class CommentController {
 
     @Operation(summary = "댓글 목록 조회", description = "특정 게시글의 댓글 목록을 조회합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "댓글 목록 조회 성공", content = @Content(schema = @Schema(implementation = Response.class), examples = @ExampleObject(value = """
+            @ApiResponse(responseCode = "200", description = "댓글 목록 조회 성공", content = @Content(schema = @Schema(implementation = CommonResponse.class), examples = @ExampleObject(value = """
                     {
                       "status": "success",
                       "message": "댓글 목록 조회 성공",
@@ -57,22 +57,22 @@ public class CommentController {
                     """)))
     })
     @GetMapping("/posts/{postId}/comments")
-    public ResponseEntity<Response<List<CommentResponse>>> getComments(
+    public ResponseEntity<CommonResponse<List<CommentResponse>>> getComments(
             @PathVariable Long postId) {
         List<CommentResponse> comments = commentService.getComments(postId);
-        return Response.ok(comments, "댓글 목록 조회 성공");
+        return CommonResponse.ok(comments, "댓글 목록 조회 성공");
     }
 
     @Operation(summary = "댓글 생성", description = "게시글에 댓글을 작성합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "댓글 생성 성공", content = @Content(schema = @Schema(implementation = Response.class), examples = @ExampleObject(value = """
+            @ApiResponse(responseCode = "201", description = "댓글 생성 성공", content = @Content(schema = @Schema(implementation = CommonResponse.class), examples = @ExampleObject(value = """
                     {
                       "status": "success",
                       "message": "댓글 생성 성공",
                       "data": 1
                     }
                     """))),
-            @ApiResponse(responseCode = "404", description = "게시글 없음", content = @Content(schema = @Schema(implementation = Response.class), examples = @ExampleObject(value = """
+            @ApiResponse(responseCode = "404", description = "게시글 없음", content = @Content(schema = @Schema(implementation = CommonResponse.class), examples = @ExampleObject(value = """
                     {
                       "status": "error",
                       "message": "게시글을 찾을 수 없습니다."
@@ -80,24 +80,24 @@ public class CommentController {
                     """)))
     })
     @PostMapping("/posts/{postId}/comments")
-    public ResponseEntity<Response<Long>> createComment(
+    public ResponseEntity<CommonResponse<Long>> createComment(
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId,
             @Valid @RequestBody CommentCreateRequest request) {
         Long commentId = commentService.createComment(userDetails.getUserId(), postId, request);
-        return Response.created(commentId, URI.create("/api/v1/comments/" + commentId), "댓글 생성 성공");
+        return CommonResponse.created(commentId, URI.create("/api/v1/comments/" + commentId), "댓글 생성 성공");
     }
 
     @Operation(summary = "댓글 수정", description = "작성자가 댓글을 수정합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "댓글 수정 성공", content = @Content(schema = @Schema(implementation = Response.class), examples = @ExampleObject(value = """
+            @ApiResponse(responseCode = "200", description = "댓글 수정 성공", content = @Content(schema = @Schema(implementation = CommonResponse.class), examples = @ExampleObject(value = """
                     {
                       "status": "success",
                       "message": "댓글 수정 성공",
                       "data": 1
                     }
                     """))),
-            @ApiResponse(responseCode = "403", description = "수정 권한 없음", content = @Content(schema = @Schema(implementation = Response.class), examples = @ExampleObject(value = """
+            @ApiResponse(responseCode = "403", description = "수정 권한 없음", content = @Content(schema = @Schema(implementation = CommonResponse.class), examples = @ExampleObject(value = """
                     {
                       "status": "error",
                       "message": "권한이 없습니다."
@@ -105,17 +105,17 @@ public class CommentController {
                     """)))
     })
     @PutMapping("/comments/{commentId}")
-    public ResponseEntity<Response<Long>> updateComment(
+    public ResponseEntity<CommonResponse<Long>> updateComment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long commentId,
             @Valid @RequestBody CommentUpdateRequest request) {
         Long updatedCommentId = commentService.updateComment(userDetails.getUserId(), commentId, request);
-        return Response.ok(updatedCommentId, "댓글 수정 성공");
+        return CommonResponse.ok(updatedCommentId, "댓글 수정 성공");
     }
 
     @Operation(summary = "댓글 삭제", description = "작성자가 댓글을 삭제합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "댓글 삭제 성공", content = @Content(schema = @Schema(implementation = Response.class), examples = @ExampleObject(value = """
+            @ApiResponse(responseCode = "200", description = "댓글 삭제 성공", content = @Content(schema = @Schema(implementation = CommonResponse.class), examples = @ExampleObject(value = """
                     {
                       "status": "success",
                       "message": "댓글 삭제 성공",
@@ -124,16 +124,16 @@ public class CommentController {
                     """)))
     })
     @DeleteMapping("/comments/{commentId}")
-    public ResponseEntity<Response<Void>> deleteComment(
+    public ResponseEntity<CommonResponse<Void>> deleteComment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long commentId) {
         commentService.deleteComment(userDetails.getUserId(), commentId);
-        return Response.noContent("댓글 삭제 성공");
+        return CommonResponse.noContent("댓글 삭제 성공");
     }
 
     @Operation(summary = "댓글 좋아요 토글", description = "댓글에 좋아요를 누르거나 취소합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "좋아요 토글 성공", content = @Content(schema = @Schema(implementation = Response.class), examples = @ExampleObject(value = """
+            @ApiResponse(responseCode = "200", description = "좋아요 토글 성공", content = @Content(schema = @Schema(implementation = CommonResponse.class), examples = @ExampleObject(value = """
                     {
                       "status": "success",
                       "message": "좋아요 토글 성공",
@@ -142,10 +142,10 @@ public class CommentController {
                     """)))
     })
     @PostMapping("/comments/{commentId}/likes")
-    public ResponseEntity<Response<Void>> toggleLike(
+    public ResponseEntity<CommonResponse<Void>> toggleLike(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long commentId) {
         commentService.toggleLike(userDetails.getUserId(), commentId);
-        return Response.noContent("좋아요 토글 성공");
+        return CommonResponse.noContent("좋아요 토글 성공");
     }
 }

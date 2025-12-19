@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import wsd.community.common.response.Response;
+import wsd.community.common.response.CommonResponse;
 import wsd.community.domain.post.request.PostCreateRequest;
 import wsd.community.domain.post.request.PostSearchCondition;
 import wsd.community.domain.post.request.PostUpdateRequest;
@@ -93,11 +93,11 @@ public class PostController {
                 }
             }
             """)))
-    public ResponseEntity<Response<Page<PostSummaryResponse>>> searchPosts(
+    public ResponseEntity<CommonResponse<Page<PostSummaryResponse>>> searchPosts(
             @ModelAttribute PostSearchCondition condition,
             @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<PostSummaryResponse> response = postService.searchPosts(condition, pageable);
-        return Response.ok(response, "게시글 목록 조회 성공");
+        return CommonResponse.ok(response, "게시글 목록 조회 성공");
     }
 
     @GetMapping("/my")
@@ -153,12 +153,12 @@ public class PostController {
                 }
             }
             """)))
-    public ResponseEntity<Response<Page<PostSummaryResponse>>> getMyPosts(
+    public ResponseEntity<CommonResponse<Page<PostSummaryResponse>>> getMyPosts(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Page<PostSummaryResponse> response = postService.getMyPosts(userDetails.getUserId(), pageable);
-        return Response.ok(response, "내 게시글 목록 조회 성공");
+        return CommonResponse.ok(response, "내 게시글 목록 조회 성공");
     }
 
     @GetMapping("/{id}")
@@ -189,9 +189,9 @@ public class PostController {
                 }
             }
             """)))
-    public ResponseEntity<Response<PostDetailResponse>> getPost(@PathVariable Long id) {
+    public ResponseEntity<CommonResponse<PostDetailResponse>> getPost(@PathVariable Long id) {
         PostDetailResponse response = postService.getPost(id);
-        return Response.ok(response, "게시글 상세 조회 성공");
+        return CommonResponse.ok(response, "게시글 상세 조회 성공");
     }
 
     @PostMapping
@@ -203,11 +203,11 @@ public class PostController {
                 "data": 1
             }
             """)))
-    public ResponseEntity<Response<Long>> createPost(
+    public ResponseEntity<CommonResponse<Long>> createPost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody @Valid PostCreateRequest request) {
         Long postId = postService.createPost(userDetails.getUserId(), request);
-        return Response.created(postId, URI.create("/api/posts/" + postId), "게시글이 성공적으로 생성되었습니다.");
+        return CommonResponse.created(postId, URI.create("/api/posts/" + postId), "게시글이 성공적으로 생성되었습니다.");
     }
 
     @PutMapping("/{id}")
@@ -219,12 +219,12 @@ public class PostController {
                 "data": 1
             }
             """)))
-    public ResponseEntity<Response<Long>> updatePost(
+    public ResponseEntity<CommonResponse<Long>> updatePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long id,
             @RequestBody @Valid PostUpdateRequest request) {
         Long postId = postService.updatePost(userDetails.getUserId(), id, request);
-        return Response.ok(postId, "게시글이 성공적으로 수정되었습니다.");
+        return CommonResponse.ok(postId, "게시글이 성공적으로 수정되었습니다.");
     }
 
     @DeleteMapping("/{id}")
@@ -236,11 +236,11 @@ public class PostController {
                 "data": null
             }
             """)))
-    public ResponseEntity<Response<Void>> deletePost(
+    public ResponseEntity<CommonResponse<Void>> deletePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long id) {
         postService.deletePost(userDetails.getUserId(), id);
-        return Response.noContent("게시글이 성공적으로 삭제되었습니다.");
+        return CommonResponse.noContent("게시글이 성공적으로 삭제되었습니다.");
     }
 
     @PostMapping("/{id}/likes")
@@ -252,10 +252,10 @@ public class PostController {
                 "data": null
             }
             """)))
-    public ResponseEntity<Response<Void>> toggleLike(
+    public ResponseEntity<CommonResponse<Void>> toggleLike(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long id) {
         postService.toggleLike(userDetails.getUserId(), id);
-        return Response.noContent("게시글 좋아요 상태가 변경되었습니다.");
+        return CommonResponse.noContent("게시글 좋아요 상태가 변경되었습니다.");
     }
 }

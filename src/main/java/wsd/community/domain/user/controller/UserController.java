@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import wsd.community.common.response.Response;
+import wsd.community.common.response.CommonResponse;
 import wsd.community.security.auth.CustomUserDetails;
 
 import wsd.community.domain.user.response.UserResponse;
@@ -39,10 +39,10 @@ public class UserController {
                 }
             }
             """)))
-    public ResponseEntity<Response<UserResponse>> getMyProfile(
+    public ResponseEntity<CommonResponse<UserResponse>> getMyProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
         UserResponse response = userService.getUser(userDetails.getUserId());
-        return Response.ok(response, "내 정보 조회 성공");
+        return CommonResponse.ok(response, "내 정보 조회 성공");
     }
 
     @DeleteMapping("/me")
@@ -54,8 +54,8 @@ public class UserController {
                 "payload": null
             }
             """)))
-    public ResponseEntity<Response<Void>> withdraw(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ResponseEntity<CommonResponse<Void>> withdraw(@AuthenticationPrincipal CustomUserDetails userDetails) {
         userService.withdraw(userDetails.getUserId());
-        return Response.noContent("회원 탈퇴 성공");
+        return CommonResponse.noContent("회원 탈퇴 성공");
     }
 }
