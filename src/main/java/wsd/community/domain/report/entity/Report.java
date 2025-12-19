@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,7 +28,10 @@ import wsd.community.domain.user.entity.User;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE reports SET deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
-@Table(name = "reports")
+@Table(name = "reports", uniqueConstraints = {
+        @UniqueConstraint(columnNames = { "reporter_id", "post_id" }),
+        @UniqueConstraint(columnNames = { "reporter_id", "comment_id" })
+})
 public class Report extends BaseEntity {
 
     @Id
@@ -64,9 +68,26 @@ public class Report extends BaseEntity {
     @Column(nullable = false)
     private ReportAction action;
 
+    @Column(length = 500)
+    private String resolvedReason;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "resolved_by")
+    private User resolvedBy;
+
+    private java.time.LocalDateTime resolvedAt;
+
+    private java.time.LocalDateTime canceledAt;
+
+    @Column(length = 300)
+    private String targetTitle;
+
+    @Column(columnDefinition = "TEXT")
+    private String targetContent;
+
     @Builder
     private Report(User reporter, Post post, Comment comment, String reason, String description, ReportType type,
-            ReportAction action) {
+            ReportAction action, String targetTitle, String targetContent) {
         this.reporter = reporter;
         this.post = post;
         this.comment = comment;
@@ -75,6 +96,8 @@ public class Report extends BaseEntity {
         this.status = ReportStatus.PENDING;
         this.type = type;
         this.action = action != null ? action : ReportAction.NO_ACTION;
+        this.targetTitle = targetTitle;
+        this.targetContent = targetContent;
     }
 
     public static Report createPostReport(User reporter, Post post, String reason, String description) {
@@ -85,6 +108,8 @@ public class Report extends BaseEntity {
                 .reason(reason)
                 .description(description)
                 .action(ReportAction.NO_ACTION)
+                .targetTitle(post.getTitle())
+                .targetContent(post.getContent())
                 .build();
     }
 
@@ -96,6 +121,7 @@ public class Report extends BaseEntity {
                 .reason(reason)
                 .description(description)
                 .action(ReportAction.NO_ACTION)
+                .targetContent(comment.getContent())
                 .build();
     }
 
@@ -103,12 +129,45 @@ public class Report extends BaseEntity {
         this.status = status;
     }
 
-    public void updateAction(ReportAction action) {
+    public void resolve(ReportAction action, String resolvedReason, User resolver) {
         this.action = action;
+        this.resolvedReason = resolvedReason;
+        this.resolvedBy = resolver;
+        this.resolvedAt = java.time.LocalDateTime.now();
+
+        if (action == ReportAction.HIDE || action == ReportAction.DELETE || action == ReportAction.DUPLICATE) {
+            this.status = ReportStatus.RESOLVED;
+        } else if (action == ReportAction.NO_ACTION) {
+            this.status = ReportStatus.REJECTED;
+        }
+    }
+
+    public void resolveAsDuplicate(ReportAction primaryAction, User resolver) {
+        this.resolve(
+                ReportAction.DUPLICATE,
+                "동일 대상에 대한 " + primaryAction + " 조치로 인해 일괄 처리됨",
+                resolver);
+    }
+
+    public void cancel() {
+        this.status = ReportStatus.CANCELED;
+        this.canceledAt = java.time.LocalDateTime.now();
     }
 
     public void update(String reason, String description) {
         this.reason = reason;
         this.description = description;
+    }
+
+    public Long getTargetId() {
+        return this.type == ReportType.POST ? this.post.getId() : this.comment.getId();
+    }
+
+    public String getTargetTitle() {
+        return this.targetTitle;
+    }
+
+    public String getTargetContent() {
+        return this.targetContent;
     }
 }

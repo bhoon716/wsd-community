@@ -4,5 +4,6 @@ public enum ReportAction {
 
     NO_ACTION,
     HIDE,
-    DELETE
+    DELETE,
+    DUPLICATE
 }
