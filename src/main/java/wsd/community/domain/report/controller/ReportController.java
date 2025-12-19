@@ -7,10 +7,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
-import wsd.community.domain.report.entity.ReportAction;
-import java.util.Map;
+import wsd.community.common.response.CommonResponse;
 
 import jakarta.validation.Valid;
+import java.net.URI;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -24,8 +24,10 @@ import org.springframework.web.bind.annotation.RestController;
 import wsd.community.domain.report.entity.ReportStatus;
 import wsd.community.domain.report.entity.ReportType;
 import wsd.community.domain.report.request.ReportCreateRequest;
+import wsd.community.domain.report.request.ReportProcessRequest;
 import wsd.community.domain.report.request.ReportUpdateRequest;
-import wsd.community.domain.report.response.ReportResponse;
+import wsd.community.domain.report.response.ReportDetailResponse;
+import wsd.community.domain.report.response.ReportSummaryResponse;
 import wsd.community.domain.report.service.ReportService;
 import wsd.community.security.auth.CustomUserDetails;
 
@@ -37,60 +39,65 @@ public class ReportController {
     private final ReportService reportService;
 
     @GetMapping("/{reportId}")
-    public ResponseEntity<ReportResponse> getReport(
+    public ResponseEntity<CommonResponse<ReportDetailResponse>> getReport(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long reportId) {
-        return ResponseEntity.ok(reportService.getReport(reportId, userDetails.getUser()));
+        return CommonResponse.ok(reportService.getReport(reportId, userDetails.getUser()), "신고 상세 조회 성공");
     }
 
     @GetMapping("/me")
-    public ResponseEntity<Page<ReportResponse>> getMyReports(
+    public ResponseEntity<CommonResponse<Page<ReportSummaryResponse>>> getMyReports(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(reportService.getMyReports(userDetails.getUser(), pageable));
+        return CommonResponse.ok(
+                reportService.getMyReports(userDetails.getUser(), pageable),
+                "내 신고 목록 조회 성공");
     }
 
     @PostMapping
-    public ResponseEntity<ReportResponse> createReport(
+    public ResponseEntity<CommonResponse<ReportDetailResponse>> createReport(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody ReportCreateRequest request) {
-        return ResponseEntity.ok(reportService.createReport(userDetails.getUser(), request));
+        ReportDetailResponse response = reportService.createReport(userDetails.getUser(), request);
+        return CommonResponse.created(response, URI.create("/api/reports/" + response.id()), "신고 생성 성공");
     }
 
     @PutMapping("/{reportId}")
-    public ResponseEntity<ReportResponse> updateReport(
+    public ResponseEntity<CommonResponse<ReportDetailResponse>> updateReport(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long reportId,
             @Valid @RequestBody ReportUpdateRequest request) {
-        return ResponseEntity.ok(reportService.updateReport(reportId, userDetails.getUser(), request));
+        return CommonResponse.ok(reportService.updateReport(reportId, userDetails.getUser(), request), "신고 수정 성공");
     }
 
     @DeleteMapping("/{reportId}")
-    public ResponseEntity<Void> deleteReport(
+    public ResponseEntity<CommonResponse<Void>> cancelReport(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long reportId) {
-        reportService.deleteReport(reportId, userDetails.getUser());
-        return ResponseEntity.noContent().build();
+        reportService.cancelReport(reportId, userDetails.getUser());
+        return CommonResponse.noContent("신고 취소 성공");
     }
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<ReportResponse>> getReports(
+    public ResponseEntity<CommonResponse<Page<ReportSummaryResponse>>> getReports(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(required = false) ReportStatus status,
             @RequestParam(required = false) ReportType type,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(reportService.getReports(status, type, pageable));
+        return CommonResponse.ok(reportService.getReports(userDetails.getUser(), status, type, pageable),
+                "신고 목록 조회 성공");
     }
 
-    @PostMapping("/{reportId}")
+    @PostMapping("/{reportId}/process")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ReportResponse> processReport(
+    public ResponseEntity<CommonResponse<ReportDetailResponse>> processReport(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long reportId,
-            @RequestBody Map<String, String> request) {
+            @Valid @RequestBody ReportProcessRequest request) {
 
-        String actionStr = request.get("action");
-        ReportAction action = ReportAction.valueOf(actionStr.toUpperCase());
-
-        return ResponseEntity.ok(reportService.processReport(reportId, action));
+        return CommonResponse.ok(
+                reportService.processReport(reportId, request.action(), request.reason(), userDetails.getUser()),
+                "신고 처리 성공");
     }
 }
