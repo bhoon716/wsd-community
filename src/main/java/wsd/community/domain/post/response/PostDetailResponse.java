@@ -15,6 +15,7 @@ public record PostDetailResponse(
         LocalDateTime updatedAt,
         String writerName,
         Long likeCount,
+        boolean isHidden,
         List<CommentResponse> comments) {
     public static PostDetailResponse from(Post post, List<CommentResponse> comments) {
         return new PostDetailResponse(
@@ -26,6 +27,7 @@ public record PostDetailResponse(
                 post.getUpdatedAt(),
                 post.getUser().getName(),
                 post.getLikeCount(),
+                post.isHidden(),
                 comments);
     }
 }

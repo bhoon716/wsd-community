@@ -9,7 +9,8 @@ public record CommentResponse(
         String writerName,
         LocalDateTime createdAt,
         LocalDateTime updatedAt,
-        Long likeCount) {
+        Long likeCount,
+        boolean isHidden) {
     public static CommentResponse from(Comment comment) {
         return new CommentResponse(
                 comment.getId(),
@@ -17,6 +18,7 @@ public record CommentResponse(
                 comment.getUser().getName(),
                 comment.getCreatedAt(),
                 comment.getUpdatedAt(),
-                comment.getLikeCount());
+                comment.getLikeCount(),
+                comment.isHidden());
     }
 }

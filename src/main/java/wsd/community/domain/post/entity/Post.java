@@ -51,6 +51,9 @@ public class Post extends BaseEntity {
     @Column(nullable = false)
     private Long likeCount;
 
+    @Column(nullable = false)
+    private boolean isHidden;
+
     @Builder
     private Post(String title, String content, User user, PostType type) {
         this.title = title;
@@ -58,6 +61,7 @@ public class Post extends BaseEntity {
         this.user = user;
         this.type = type;
         this.likeCount = 0L;
+        this.isHidden = false;
     }
 
     public void update(String title, String content, PostType type) {
@@ -72,5 +76,9 @@ public class Post extends BaseEntity {
 
     public void decreaseLikeCount() {
         this.likeCount = Math.max(0, this.likeCount - 1);
+    }
+
+    public void hide() {
+        this.isHidden = true;
     }
 }

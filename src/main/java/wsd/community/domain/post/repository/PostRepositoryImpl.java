@@ -43,7 +43,8 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                         post.createdAt,
                         post.updatedAt,
                         post.user.name,
-                        post.likeCount))
+                        post.likeCount,
+                        post.isHidden))
                 .from(post)
                 .leftJoin(post.user, user)
                 .where(where)
@@ -72,7 +73,8 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                         post.createdAt,
                         post.updatedAt,
                         post.user.name,
-                        post.likeCount))
+                        post.likeCount,
+                        post.isHidden))
                 .from(post)
                 .leftJoin(post.user, user)
                 .where(where)
