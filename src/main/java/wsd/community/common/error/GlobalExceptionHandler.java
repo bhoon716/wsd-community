@@ -100,6 +100,15 @@ public class GlobalExceptionHandler {
         return buildResponse(ErrorCode.NOT_FOUND, request.getRequestURI(), null);
     }
 
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(
+            HttpServletRequest request, org.springframework.dao.DataIntegrityViolationException e) {
+
+        log.warn("[WARN] 데이터 무결성 위반: path={}, message={}", request.getRequestURI(), e.getMessage());
+
+        return buildResponse(ErrorCode.DUPLICATE_REPORT, request.getRequestURI(), null);
+    }
+
     private Map<String, Object> detailOrNull(String detailMessage) {
         return detailMessage == null ? null : Map.of("detail", detailMessage);
     }

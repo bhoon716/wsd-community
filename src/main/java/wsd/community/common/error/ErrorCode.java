@@ -31,6 +31,12 @@ public enum ErrorCode {
 
     // Report
     REPORT_NOT_FOUND(HttpStatus.NOT_FOUND, "R001", "신고를 찾을 수 없습니다."),
+    SELF_REPORT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "R002", "본인의 게시글이나 댓글은 신고할 수 없습니다."),
+    DUPLICATE_REPORT(HttpStatus.CONFLICT, "R003", "이미 신고한 게시글/댓글입니다."),
+    REPORT_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "R004", "이미 처리된 신고입니다."),
+    REPORT_HANDLER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "R005", "신고 핸들러 설정 오류입니다."),
+    INVALID_REPORT_ACTION(HttpStatus.BAD_REQUEST, "R006", "유효하지 않은 신고 처리 작업입니다."),
+    UNSUPPORTED_REPORT_TYPE(HttpStatus.BAD_REQUEST, "R007", "지원하지 않는 신고 유형입니다."),
 
     // Global
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G001", "내부 서버 오류가 발생했습니다."),
