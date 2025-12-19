@@ -1,5 +1,8 @@
 package wsd.community.domain.report.service;
 
+import jakarta.annotation.PostConstruct;
+import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -7,19 +10,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wsd.community.common.error.CustomException;
 import wsd.community.common.error.ErrorCode;
-import wsd.community.domain.comment.entity.Comment;
-import wsd.community.domain.comment.repository.CommentRepository;
-import wsd.community.domain.post.entity.Post;
-import wsd.community.domain.post.repository.PostRepository;
 import wsd.community.domain.report.entity.Report;
 import wsd.community.domain.report.entity.ReportAction;
 import wsd.community.domain.report.entity.ReportStatus;
 import wsd.community.domain.report.entity.ReportType;
+import wsd.community.domain.report.handler.ReportTypeHandler;
 import wsd.community.domain.report.repository.ReportRepository;
 import wsd.community.domain.report.request.ReportCreateRequest;
 import wsd.community.domain.report.request.ReportUpdateRequest;
-import wsd.community.domain.report.response.ReportResponse;
+import wsd.community.domain.report.response.ReportDetailResponse;
+import wsd.community.domain.report.response.ReportSummaryResponse;
 import wsd.community.domain.user.entity.User;
+import wsd.community.domain.user.entity.UserRole;
 
 @Service
 @RequiredArgsConstructor
@@ -27,127 +29,137 @@ import wsd.community.domain.user.entity.User;
 public class ReportService {
 
     private final ReportRepository reportRepository;
-    private final PostRepository postRepository;
-    private final CommentRepository commentRepository;
+    private final List<ReportTypeHandler> handlers;
+    private final Map<ReportType, ReportTypeHandler> handlerMap = new java.util.EnumMap<>(ReportType.class);
 
-    public Page<ReportResponse> getReports(ReportStatus status, ReportType type, Pageable pageable) {
+    @PostConstruct
+    public void initHandlers() {
+        for (ReportTypeHandler handler : handlers) {
+            ReportType type = handler.getType();
+            if (handlerMap.containsKey(type)) {
+                throw new CustomException(ErrorCode.REPORT_HANDLER_ERROR);
+            }
+            handlerMap.put(type, handler);
+        }
+
+        for (ReportType type : ReportType.values()) {
+            if (!handlerMap.containsKey(type)) {
+                throw new CustomException(ErrorCode.REPORT_HANDLER_ERROR);
+            }
+        }
+    }
+
+    private ReportTypeHandler getHandler(ReportType type) {
+        ReportTypeHandler handler = handlerMap.get(type);
+        if (handler == null) {
+            throw new CustomException(ErrorCode.UNSUPPORTED_REPORT_TYPE);
+        }
+        return handler;
+    }
+
+    public Page<ReportSummaryResponse> getReports(User user, ReportStatus status, ReportType type, Pageable pageable) {
+        validateAdmin(user);
         return reportRepository.getReports(status, type, pageable);
     }
 
-    public Page<ReportResponse> getMyReports(User user, Pageable pageable) {
-        return reportRepository.findByReporter(user, pageable)
-                .map(ReportResponse::from);
+    public Page<ReportSummaryResponse> getMyReports(User currentUser, Pageable pageable) {
+        return reportRepository.getMyReports(currentUser, pageable);
     }
 
-    public ReportResponse getReport(Long reportId, User currentUser) {
-        Report report = reportRepository.findById(reportId)
+    public ReportDetailResponse getReport(Long reportId, User currentUser) {
+        ReportDetailResponse report = reportRepository.getReportDetail(reportId)
                 .orElseThrow(() -> new CustomException(ErrorCode.REPORT_NOT_FOUND));
 
-        if (!report.getReporter().getId().equals(currentUser.getId())
-                && currentUser.getRole() != wsd.community.domain.user.entity.UserRole.ADMIN) {
+        if (!report.reporterId().equals(currentUser.getId())
+                && (currentUser.getRole() != UserRole.ADMIN)) {
             throw new CustomException(ErrorCode.FORBIDDEN);
         }
 
-        return ReportResponse.from(report);
+        return report;
     }
 
     @Transactional
-    public ReportResponse createReport(User reporter, ReportCreateRequest request) {
-        Report report = null;
-
-        if (request.type() == ReportType.POST) {
-            Post post = postRepository.findById(request.targetId())
-                    .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));
-
-            if (post.getUser().getId().equals(reporter.getId())) {
-                throw new CustomException(ErrorCode.INVALID_INPUT);
-            }
-
-            if (reportRepository.existsByReporterAndPost(reporter, post)) {
-                throw new CustomException(ErrorCode.INVALID_INPUT);
-            }
-
-            report = Report.createPostReport(reporter, post, request.reason(), request.description());
-        } else if (request.type() == ReportType.COMMENT) {
-            Comment comment = commentRepository.findById(request.targetId())
-                    .orElseThrow(() -> new CustomException(ErrorCode.COMMENT_NOT_FOUND));
-
-            if (comment.getUser().getId().equals(reporter.getId())) {
-                throw new CustomException(ErrorCode.INVALID_INPUT);
-            }
-
-            if (reportRepository.existsByReporterAndComment(reporter, comment)) {
-                throw new CustomException(ErrorCode.INVALID_INPUT);
-            }
-
-            report = Report.createCommentReport(reporter, comment, request.reason(), request.description());
-        }
-
-        if (report == null) {
-            throw new CustomException(ErrorCode.INVALID_INPUT);
-        }
-
-        Report savedReport = reportRepository.save(report);
-        return ReportResponse.from(savedReport);
+    public ReportDetailResponse createReport(User reporter, ReportCreateRequest request) {
+        ReportTypeHandler handler = getHandler(request.type());
+        Report report = handler.createReport(reporter, request);
+        reportRepository.save(report);
+        return ReportDetailResponse.from(report);
     }
 
     @Transactional
-    public ReportResponse processReport(Long reportId, ReportAction action) {
+    public ReportDetailResponse processReport(Long reportId, ReportAction action, String resolvedReason, User user) {
+        validateAdmin(user);
+        if (action == ReportAction.DUPLICATE) {
+            throw new CustomException(ErrorCode.INVALID_REPORT_ACTION);
+        }
+
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new CustomException(ErrorCode.REPORT_NOT_FOUND));
+
+        validatePendingStatus(report);
+
+        ReportTypeHandler handler = getHandler(report.getType());
 
         switch (action) {
-            case HIDE:
-                if (report.getType() == ReportType.POST) {
-                    report.getPost().hide();
-                } else if (report.getType() == ReportType.COMMENT) {
-                    report.getComment().hide();
-                }
-                report.updateStatus(ReportStatus.RESOLVED);
-                break;
-            case DELETE:
-                if (report.getType() == ReportType.POST) {
-                    postRepository.delete(report.getPost());
-                } else if (report.getType() == ReportType.COMMENT) {
-                    commentRepository.delete(report.getComment());
-                }
-                report.updateStatus(ReportStatus.RESOLVED);
-                break;
-            case NO_ACTION:
-                report.updateStatus(ReportStatus.REJECTED);
-                break;
+            case HIDE -> handler.hideTarget(report);
+            case DELETE -> handler.deleteTarget(report);
+            case NO_ACTION -> {
+            }
+            default -> throw new CustomException(ErrorCode.INVALID_REPORT_ACTION);
         }
 
-        report.updateAction(action);
-        return ReportResponse.from(report);
+        report.resolve(action, resolvedReason, user);
+
+        if (action == ReportAction.HIDE || action == ReportAction.DELETE) {
+            resolveRelatedReports(handler, report, user);
+        }
+
+        return ReportDetailResponse.from(report);
+    }
+
+    private void resolveRelatedReports(ReportTypeHandler handler, Report primaryReport, User admin) {
+        handler.getRelatedPendingReports(primaryReport)
+                .forEach(related -> related.resolveAsDuplicate(primaryReport.getAction(), admin));
     }
 
     @Transactional
-    public ReportResponse updateReport(Long reportId, User currentUser, ReportUpdateRequest request) {
+    public ReportDetailResponse updateReport(Long reportId, User currentUser, ReportUpdateRequest request) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new CustomException(ErrorCode.REPORT_NOT_FOUND));
 
-        if (!report.getReporter().getId().equals(currentUser.getId())) {
-            throw new CustomException(ErrorCode.FORBIDDEN);
-        }
-
-        if (report.getStatus() != ReportStatus.PENDING) {
-            throw new CustomException(ErrorCode.INVALID_INPUT);
-        }
+        validateReportOwner(report, currentUser);
+        validatePendingStatus(report);
 
         report.update(request.reason(), request.description());
-        return ReportResponse.from(report);
+        return ReportDetailResponse.from(report);
     }
 
     @Transactional
-    public void deleteReport(Long reportId, User currentUser) {
+    public void cancelReport(Long reportId, User currentUser) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new CustomException(ErrorCode.REPORT_NOT_FOUND));
 
-        if (!report.getReporter().getId().equals(currentUser.getId())) {
+        validateReportOwner(report, currentUser);
+        validatePendingStatus(report);
+
+        report.cancel();
+    }
+
+    private void validateReportOwner(Report report, User user) {
+        if (!report.getReporter().getId().equals(user.getId())) {
             throw new CustomException(ErrorCode.FORBIDDEN);
         }
+    }
 
-        reportRepository.delete(report);
+    private void validatePendingStatus(Report report) {
+        if (report.getStatus() != ReportStatus.PENDING) {
+            throw new CustomException(ErrorCode.REPORT_ALREADY_PROCESSED);
+        }
+    }
+
+    private void validateAdmin(User user) {
+        if (user.getRole() != UserRole.ADMIN) {
+            throw new CustomException(ErrorCode.NOT_ADMIN);
+        }
     }
 }
