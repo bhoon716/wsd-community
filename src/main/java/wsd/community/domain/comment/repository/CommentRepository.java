@@ -8,4 +8,5 @@ import wsd.community.domain.post.entity.Post;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     List<Comment> findByPost(Post post);
+
 }
