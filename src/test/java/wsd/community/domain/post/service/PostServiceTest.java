@@ -6,7 +6,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -232,7 +231,6 @@ class PostServiceTest {
             Post post = createPost(postId, user);
 
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
-            given(commentRepository.findByPost(post)).willReturn(List.of());
 
             // when
             PostDetailResponse response = postService.getPost(postId);
