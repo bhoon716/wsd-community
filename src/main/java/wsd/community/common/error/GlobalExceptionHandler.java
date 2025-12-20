@@ -80,7 +80,7 @@ public class GlobalExceptionHandler {
             HttpServletRequest request, Exception e) {
 
         log.error("[ERROR] 예기치 못한 오류: path={}, exception={}",
-                request.getRequestURI(), e.getClass().getSimpleName(), e);
+                request.getRequestURI(), e.getClass().getSimpleName());
 
         Map<String, Object> details = detailOrNull(e.getMessage());
         return buildResponse(ErrorCode.INTERNAL_ERROR, request.getRequestURI(), details);
