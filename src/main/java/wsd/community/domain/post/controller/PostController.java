@@ -17,16 +17,16 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import wsd.community.common.response.CommonResponse;
+import wsd.community.domain.post.entity.PostType;
 import wsd.community.domain.post.request.PostCreateRequest;
-import wsd.community.domain.post.request.PostSearchRequest;
 import wsd.community.domain.post.request.PostUpdateRequest;
 import wsd.community.domain.post.response.PostDetailResponse;
 import wsd.community.domain.post.response.PostSummaryResponse;
@@ -95,9 +95,10 @@ public class PostController {
             }
             """)))
     public ResponseEntity<CommonResponse<Page<PostSummaryResponse>>> searchPosts(
-            @ModelAttribute PostSearchRequest condition,
+            @RequestParam(required = false) PostType type,
+            @RequestParam(required = false) String keyword,
             @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<PostSummaryResponse> response = postService.searchPosts(condition, pageable);
+        Page<PostSummaryResponse> response = postService.searchPosts(type, keyword, pageable);
         return CommonResponse.ok(response, "게시글 목록 조회 성공");
     }
 
