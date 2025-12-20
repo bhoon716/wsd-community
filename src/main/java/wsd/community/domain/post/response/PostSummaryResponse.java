@@ -12,7 +12,8 @@ public record PostSummaryResponse(
         LocalDateTime updatedAt,
         String writerName,
         Long likeCount,
-        boolean isHidden) {
+        boolean isHidden,
+        boolean isPinned) {
     @QueryProjection
     public PostSummaryResponse {
     }

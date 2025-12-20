@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -210,24 +211,41 @@ public class PostController {
         return CommonResponse.created(postId, URI.create("/api/posts/" + postId), "게시글이 성공적으로 생성되었습니다.");
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "게시글 수정", description = "기존 게시글을 수정합니다.")
+    @PutMapping("/{postId}")
+    @Operation(summary = "게시글 수정", description = "게시글을 수정합니다.")
     @ApiResponse(responseCode = "200", description = "수정 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "게시글 수정 성공 예시", value = """
             {
                 "code": "SUCCESS",
-                "message": "게시글이 성공적으로 수정되었습니다.",
+                "message": "게시글 수정 성공",
                 "data": 1
             }
             """)))
     public ResponseEntity<CommonResponse<Long>> updatePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long id,
-            @RequestBody @Valid PostUpdateRequest request) {
-        Long postId = postService.updatePost(userDetails.getUserId(), id, request);
-        return CommonResponse.ok(postId, "게시글이 성공적으로 수정되었습니다.");
+            @PathVariable Long postId,
+            @Valid @RequestBody PostUpdateRequest request) {
+        return CommonResponse.ok(
+                postService.updatePost(userDetails.getUserId(), postId, request),
+                "게시글 수정 성공");
     }
 
-    @DeleteMapping("/{id}")
+    @PostMapping("/{postId}/pin")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "게시글 고정 (관리자 전용)", description = "게시글을 고정하거나 고정 해제합니다.")
+    @ApiResponse(responseCode = "200", description = "고정 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "게시글 고정 성공 예시", value = """
+            {
+                "code": "SUCCESS",
+                "message": "게시글 고정 성공"
+            }
+            """)))
+    public ResponseEntity<CommonResponse<Void>> togglePin(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long postId) {
+        postService.togglePin(userDetails.getUserId(), postId);
+        return CommonResponse.ok(null, "게시글 고정 성공");
+    }
+
+    @DeleteMapping("/{postId}")
     @Operation(summary = "게시글 삭제", description = "게시글을 삭제합니다.")
     @ApiResponse(responseCode = "200", description = "삭제 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "게시글 삭제 성공 예시", value = """
             {

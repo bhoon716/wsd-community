@@ -59,7 +59,7 @@ class PostServiceTest {
             // given
             Long userId = 1L;
             PostCreateRequest request = new PostCreateRequest("title", "content", PostType.GENERAL);
-            User user = createUser(userId);
+            User user = createUser(userId, UserRole.USER);
 
             given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
@@ -95,8 +95,7 @@ class PostServiceTest {
             // given
             Long userId = 1L;
             PostCreateRequest request = new PostCreateRequest("title", "content", PostType.NOTICE);
-            User user = createUser(userId);
-            ReflectionTestUtils.setField(user, "role", UserRole.USER);
+            User user = createUser(userId, UserRole.USER);
 
             given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
@@ -112,8 +111,7 @@ class PostServiceTest {
             // given
             Long userId = 1L;
             PostCreateRequest request = new PostCreateRequest("title", "content", PostType.NOTICE);
-            User user = createUser(userId);
-            ReflectionTestUtils.setField(user, "role", UserRole.ADMIN);
+            User user = createUser(userId, UserRole.ADMIN);
 
             given(userRepository.findById(userId)).willReturn(Optional.of(user));
 
@@ -132,10 +130,8 @@ class PostServiceTest {
             Long postId = 1L;
             PostUpdateRequest request = new PostUpdateRequest("title", "content", PostType.NOTICE);
 
-            User user = createUser(userId);
-            ReflectionTestUtils.setField(user, "role", UserRole.USER);
-
-            Post post = createPost(postId, user);
+            User user = createUser(userId, UserRole.USER);
+            Post post = createPost(postId, user, PostType.GENERAL);
 
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
             given(userRepository.findById(userId)).willReturn(Optional.of(user));
@@ -158,9 +154,8 @@ class PostServiceTest {
             Long userId = 1L;
             Long postId = 1L;
             PostUpdateRequest request = new PostUpdateRequest("updated title", "updated content", PostType.NOTICE);
-            User user = createUser(userId);
-            ReflectionTestUtils.setField(user, "role", UserRole.ADMIN);
-            Post post = createPost(postId, user);
+            User user = createUser(userId, UserRole.ADMIN);
+            Post post = createPost(postId, user, PostType.GENERAL);
 
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
             given(userRepository.findById(userId)).willReturn(Optional.of(user));
@@ -183,8 +178,9 @@ class PostServiceTest {
             Long otherUserId = 2L;
             Long postId = 1L;
             PostUpdateRequest request = new PostUpdateRequest("updated title", "updated content", PostType.GENERAL);
-            createUser(userId);
-            Post post = createPost(postId, createUser(otherUserId));
+
+            createUser(userId, UserRole.USER);
+            Post post = createPost(postId, createUser(otherUserId, UserRole.USER), PostType.GENERAL);
 
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
 
@@ -205,8 +201,8 @@ class PostServiceTest {
             // given
             Long userId = 1L;
             Long postId = 1L;
-            User user = createUser(userId);
-            Post post = createPost(postId, user);
+            User user = createUser(userId, UserRole.USER);
+            Post post = createPost(postId, user, PostType.GENERAL);
 
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
 
@@ -227,8 +223,8 @@ class PostServiceTest {
         void success() {
             // given
             Long postId = 1L;
-            User user = createUser(1L);
-            Post post = createPost(postId, user);
+            User user = createUser(1L, UserRole.USER);
+            Post post = createPost(postId, user, PostType.GENERAL);
 
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
 
@@ -265,8 +261,8 @@ class PostServiceTest {
             // given
             Long userId = 1L;
             Long postId = 1L;
-            User user = createUser(userId);
-            Post post = createPost(postId, user);
+            User user = createUser(userId, UserRole.USER);
+            Post post = createPost(postId, user, PostType.GENERAL);
 
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
             given(userRepository.findById(userId)).willReturn(Optional.of(user));
@@ -286,8 +282,8 @@ class PostServiceTest {
             // given
             Long userId = 1L;
             Long postId = 1L;
-            User user = createUser(userId);
-            Post post = createPost(postId, user);
+            User user = createUser(userId, UserRole.USER);
+            Post post = createPost(postId, user, PostType.GENERAL);
             ReflectionTestUtils.setField(post, "likeCount", 1L);
 
             PostLike postLike = PostLike.builder().user(user).post(post).build();
@@ -305,22 +301,81 @@ class PostServiceTest {
         }
     }
 
-    private User createUser(Long id) {
+    @Nested
+    @DisplayName("게시글 고정")
+    class PinPost {
+
+        @Test
+        @DisplayName("성공: 관리자가 게시글 고정")
+        void success_pin_admin() {
+            // given
+            Long userId = 1L;
+            Long postId = 1L;
+            User user = createUser(userId, UserRole.ADMIN);
+            Post post = createPost(postId, user, PostType.GENERAL);
+
+            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+            given(postRepository.findById(postId)).willReturn(Optional.of(post));
+
+            // when
+            postService.togglePin(userId, postId);
+
+            // then
+            assertThat(post.isPinned()).isTrue();
+        }
+
+        @Test
+        @DisplayName("성공: 관리자가 게시글 고정 해제")
+        void success_unpin_admin() {
+            // given
+            Long userId = 1L;
+            Long postId = 1L;
+            User user = createUser(userId, UserRole.ADMIN);
+            Post post = createPost(postId, user, PostType.GENERAL);
+            post.togglePin(); // make it pinned
+
+            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+            given(postRepository.findById(postId)).willReturn(Optional.of(post));
+
+            // when
+            postService.togglePin(userId, postId);
+
+            // then
+            assertThat(post.isPinned()).isFalse();
+        }
+
+        @Test
+        @DisplayName("실패: 일반 사용자가 게시글 고정 시도")
+        void fail_pin_notAdmin() {
+            // given
+            Long userId = 1L;
+            Long postId = 1L;
+            User user = createUser(userId, UserRole.USER);
+
+            given(userRepository.findById(userId)).willReturn(Optional.of(user));
+
+            // when & then
+            assertThatThrownBy(() -> postService.togglePin(userId, postId))
+                    .isInstanceOf(CustomException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.NOT_ADMIN);
+        }
+    }
+
+    private User createUser(Long id, UserRole role) {
         User user = User.builder()
                 .name("test user")
                 .email("test@test.com")
-                .role(UserRole.USER)
+                .role(role)
                 .build();
         ReflectionTestUtils.setField(user, "id", id);
-        ReflectionTestUtils.setField(user, "role", UserRole.USER);
         return user;
     }
 
-    private Post createPost(Long id, User user) {
+    private Post createPost(Long id, User user, PostType type) {
         Post post = Post.builder()
                 .title("title")
                 .content("content")
-                .type(PostType.GENERAL)
+                .type(type)
                 .user(user)
                 .build();
         ReflectionTestUtils.setField(post, "id", id);

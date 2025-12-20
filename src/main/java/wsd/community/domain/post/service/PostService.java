@@ -109,6 +109,19 @@ public class PostService {
                         });
     }
 
+    @Transactional
+    public void togglePin(Long userId, Long postId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
+
+        if (user.getRole() != UserRole.ADMIN) {
+            throw new CustomException(ErrorCode.NOT_ADMIN);
+        }
+
+        Post post = findPostById(postId);
+        post.togglePin();
+    }
+
     private Post findPostById(Long postId) {
         return postRepository.findById(postId)
                 .orElseThrow(() -> new CustomException(ErrorCode.POST_NOT_FOUND));

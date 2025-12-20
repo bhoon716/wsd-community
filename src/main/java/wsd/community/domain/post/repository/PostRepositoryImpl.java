@@ -58,7 +58,8 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
                         post.updatedAt,
                         post.user.name,
                         post.likeCount,
-                        post.isHidden))
+                        post.isHidden,
+                        post.isPinned))
                 .from(post)
                 .leftJoin(post.user, user)
                 .where(where)
@@ -94,6 +95,8 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
 
     private OrderSpecifier<?>[] getOrderSpecifiers(Pageable pageable) {
         List<OrderSpecifier<?>> orders = new ArrayList<>();
+
+        orders.add(new OrderSpecifier<>(Order.DESC, post.isPinned));
 
         if (!pageable.getSort().isEmpty()) {
             for (Sort.Order order : pageable.getSort()) {
