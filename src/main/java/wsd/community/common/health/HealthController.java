@@ -10,8 +10,10 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import java.time.LocalDateTime;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @Tag(name = "System", description = "시스템 관련 API")
@@ -35,6 +37,7 @@ public class HealthController {
                 buildProperties.getVersion(),
                 buildProperties.getTime(),
                 LocalDateTime.now());
-        return CommonResponse.ok(response, "Health check passed");
+        log.info("Health check 통과");
+        return CommonResponse.ok(response, "Health check 통과");
     }
 }

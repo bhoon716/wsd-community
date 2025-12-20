@@ -34,6 +34,7 @@ public class AuthService {
     private final FirebaseService firebaseService;
 
     public LoginResponse loginWithFirebase(String idToken) {
+        log.info("Firebase 로그인 요청");
         FirebaseToken decodedToken = firebaseService.verifyToken(idToken);
         String email = decodedToken.getEmail();
         String uid = decodedToken.getUid();
@@ -52,6 +53,7 @@ public class AuthService {
                         .providerId(uid)
                         .build()));
 
+        log.info("Firebase 로그인 완료: userId={}, email={}", user.getId(), email);
         return generateLoginResponse(user);
     }
 

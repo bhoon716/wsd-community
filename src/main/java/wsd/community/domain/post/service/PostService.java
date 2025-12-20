@@ -1,6 +1,7 @@
 package wsd.community.domain.post.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import wsd.community.domain.user.entity.User;
 import wsd.community.domain.user.entity.UserRole;
 import wsd.community.domain.user.repository.UserRepository;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -34,6 +36,7 @@ public class PostService {
     private final UserRepository userRepository;
 
     public PostDetailResponse getPost(Long postId) {
+        log.info("게시글 조회 요청: postId={}", postId);
         Post post = findPostById(postId);
         List<CommentResponse> comments = commentRepository.findAllByPostId(postId);
 
@@ -41,16 +44,19 @@ public class PostService {
     }
 
     public Page<PostSummaryResponse> searchPosts(PostType type, String keyword, Pageable pageable) {
+        log.info("게시글 검색 요청: type={}, keyword={}", type, keyword);
         return postRepository.search(type, keyword, pageable);
     }
 
     @Transactional(readOnly = true)
     public Page<PostSummaryResponse> getMyPosts(Long userId, Pageable pageable) {
+        log.info("내 게시글 조회 요청: userId={}", userId);
         return postRepository.findMyPosts(userId, pageable);
     }
 
     @Transactional
     public Long createPost(Long userId, PostCreateRequest request) {
+        log.info("게시글 생성 요청: userId={}, type={}", userId, request.type());
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 
@@ -64,11 +70,13 @@ public class PostService {
                 .build();
 
         postRepository.save(post);
+        log.info("게시글 생성 완료: postId={}", post.getId());
         return post.getId();
     }
 
     @Transactional
     public Long updatePost(Long userId, Long postId, PostUpdateRequest request) {
+        log.info("게시글 수정 요청: userId={}, postId={}", userId, postId);
         Post post = findPostById(postId);
 
         validateWriter(post, userId);
@@ -79,15 +87,18 @@ public class PostService {
         validateAdminRole(user, request.type());
 
         post.update(request.title(), request.content(), request.type());
+        log.info("게시글 수정 완료: postId={}", postId);
         return post.getId();
     }
 
     @Transactional
     public void deletePost(Long userId, Long postId) {
+        log.info("게시글 삭제 요청: userId={}, postId={}", userId, postId);
         Post post = findPostById(postId);
         validateWriter(post, userId);
 
         postRepository.delete(post);
+        log.info("게시글 삭제 완료: postId={}", postId);
     }
 
     @Transactional
@@ -101,15 +112,18 @@ public class PostService {
                         postLike -> {
                             postLikeRepository.delete(postLike);
                             post.decreaseLikeCount();
+                            log.info("게시글 좋아요 취소: userId={}, postId={}", userId, postId);
                         },
                         () -> {
                             postLikeRepository.save(new PostLike(user, post));
                             post.increaseLikeCount();
+                            log.info("게시글 좋아요 추가: userId={}, postId={}", userId, postId);
                         });
     }
 
     @Transactional
     public void togglePin(Long userId, Long postId) {
+        log.info("게시글 고정 토글 요청: userId={}, postId={}", userId, postId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 
@@ -119,6 +133,7 @@ public class PostService {
 
         Post post = findPostById(postId);
         post.togglePin();
+        log.info("게시글 고정 토글 완료: postId={}, isPinned={}", postId, post.isPinned());
     }
 
     private Post findPostById(Long postId) {

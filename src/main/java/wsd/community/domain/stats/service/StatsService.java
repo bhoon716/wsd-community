@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wsd.community.domain.comment.repository.CommentRepository;
@@ -12,6 +13,7 @@ import wsd.community.domain.post.repository.PostRepository;
 import wsd.community.domain.stats.response.TopCommenterResponse;
 import wsd.community.domain.stats.response.TopWriterResponse;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -21,6 +23,7 @@ public class StatsService {
     private final CommentRepository commentRepository;
 
     public List<TopWriterResponse> getTopWriters(int limit, int days) {
+        log.info("인기 작성자 조회 요청: limit={}, days={}", limit, days);
         LocalDateTime endDate = LocalDateTime.now();
         LocalDateTime startDate = endDate.minusDays(days);
 
@@ -44,6 +47,7 @@ public class StatsService {
     }
 
     public List<TopCommenterResponse> getTopCommenters(int limit, int days) {
+        log.info("인기 댓글 작성자 조회 요청: limit={}, days={}", limit, days);
         LocalDateTime endDate = LocalDateTime.now();
         LocalDateTime startDate = endDate.minusDays(days);
 

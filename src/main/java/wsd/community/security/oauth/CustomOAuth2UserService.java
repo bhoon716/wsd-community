@@ -39,7 +39,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         String name = (String) attributes.get("name");
         String providerId = oAuth2User.getName();
 
+        log.info("OAuth2 사용자 로드 요청: provider={}, email={}", registrationId, email);
         User user = saveOrUpdate(email, name, registrationId, providerId);
+        log.info("OAuth2 사용자 로드 완료: userId={}", user.getId());
 
         return new DefaultOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority(user.getRole().getKey())),
@@ -58,7 +60,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                         .providerId(providerId)
                         .build());
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        log.info("사용자 저장/업데이트: userId={}, email={}", savedUser.getId(), email);
+        return savedUser;
     }
 
     protected OAuth2User getDelegateUser(OAuth2UserRequest userRequest) {
