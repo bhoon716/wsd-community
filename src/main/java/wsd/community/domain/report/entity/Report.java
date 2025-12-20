@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
@@ -31,6 +32,9 @@ import wsd.community.domain.user.entity.User;
 @Table(name = "reports", uniqueConstraints = {
         @UniqueConstraint(columnNames = { "reporter_id", "post_id" }),
         @UniqueConstraint(columnNames = { "reporter_id", "comment_id" })
+}, indexes = {
+        @Index(name = "idx_report_status", columnList = "status"),
+        @Index(name = "idx_report_created_at", columnList = "created_at")
 })
 public class Report extends BaseEntity {
 

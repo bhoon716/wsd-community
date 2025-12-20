@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -26,7 +27,11 @@ import wsd.community.domain.user.entity.User;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLDelete(sql = "UPDATE posts SET deleted_at = NOW() WHERE id = ?")
 @SQLRestriction("deleted_at IS NULL")
-@Table(name = "posts")
+@Table(name = "posts", indexes = {
+        @Index(name = "idx_post_title", columnList = "title"),
+        @Index(name = "idx_post_created_at", columnList = "created_at"),
+        @Index(name = "idx_post_user_id", columnList = "user_id")
+})
 public class Post extends BaseEntity {
 
     @Id
