@@ -36,9 +36,7 @@ public class PostService {
 
     public PostDetailResponse getPost(Long postId) {
         Post post = findPostById(postId);
-        List<CommentResponse> comments = commentRepository.findByPost(post).stream()
-                .map(CommentResponse::from)
-                .toList();
+        List<CommentResponse> comments = commentRepository.findAllByPostId(postId);
 
         return PostDetailResponse.from(post, comments);
     }

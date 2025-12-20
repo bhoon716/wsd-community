@@ -61,10 +61,8 @@ public class CommentService {
     }
 
     public List<CommentResponse> getComments(Long postId) {
-        Post post = findPostById(postId);
-        return commentRepository.findByPost(post).stream()
-                .map(CommentResponse::from)
-                .toList();
+        return commentRepository.findAllByPostId(postId);
+
     }
 
     @Transactional

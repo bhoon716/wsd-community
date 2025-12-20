@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import wsd.community.domain.comment.entity.Comment;
 import wsd.community.domain.post.entity.Post;
 
-public interface CommentRepository extends JpaRepository<Comment, Long> {
+public interface CommentRepository extends JpaRepository<Comment, Long>, CommentRepositoryCustom {
 
     List<Comment> findByPost(Post post);
 
