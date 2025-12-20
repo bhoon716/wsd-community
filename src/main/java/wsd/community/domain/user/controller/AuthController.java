@@ -51,7 +51,7 @@ public class AuthController {
             HttpServletResponse httpServletResponse) {
         authService.logout(accessToken.substring(BEARER_PREFIX.length()));
         removeRefreshTokenCookie(httpServletResponse);
-        return ResponseEntity.ok(CommonResponse.success(null, "로그아웃 성공"));
+        return CommonResponse.ok(null, "로그아웃 성공");
     }
 
     @PostMapping("/firebase")
@@ -75,7 +75,7 @@ public class AuthController {
         setAccessTokenHeader(httpServletResponse, response.getAccessToken());
         addRefreshTokenCookie(httpServletResponse, response.getRefreshToken());
 
-        return ResponseEntity.ok(CommonResponse.success(response.getUser(), "로그인 성공"));
+        return CommonResponse.ok(response.getUser(), "로그인 성공");
     }
 
     @PostMapping("/reissue")
@@ -99,7 +99,7 @@ public class AuthController {
         setAccessTokenHeader(httpServletResponse, response.getAccessToken());
         addRefreshTokenCookie(httpServletResponse, response.getRefreshToken());
 
-        return ResponseEntity.ok(CommonResponse.success(response.getUser(), "토큰 재발급 성공"));
+        return CommonResponse.ok(response.getUser(), "토큰 재발급 성공");
     }
 
     private void setAccessTokenHeader(HttpServletResponse response, String accessToken) {

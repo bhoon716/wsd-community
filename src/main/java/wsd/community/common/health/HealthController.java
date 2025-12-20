@@ -1,16 +1,16 @@
 package wsd.community.common.health;
 
 import org.springframework.boot.info.BuildProperties;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import wsd.community.common.response.CommonResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,12 +29,12 @@ public class HealthController {
                 "timestamp": "2025-12-12T10:00:00.123"
             }
             """)))
-    public Map<String, Object> checkHealth() {
-        Map<String, Object> health = new LinkedHashMap<>();
-        health.put("status", "UP");
-        health.put("version", buildProperties.getVersion());
-        health.put("buildTime", buildProperties.getTime());
-        health.put("timestamp", LocalDateTime.now());
-        return health;
+    public ResponseEntity<CommonResponse<HealthCheckResponse>> checkHealth() {
+        HealthCheckResponse response = new HealthCheckResponse(
+                "UP",
+                buildProperties.getVersion(),
+                buildProperties.getTime(),
+                LocalDateTime.now());
+        return CommonResponse.ok(response, "Health check passed");
     }
 }
