@@ -48,11 +48,13 @@ public class SecurityConfig {
         };
 
         private static final String[] PERMIT_GET_ENDPOINTS = new String[] {
+                        "/api/posts",
+                        "/api/posts/*",
+                        "/api/posts/*/comments",
+                        "/api/stats/**"
         };
 
         private static final String[] PERMIT_POST_ENDPOINTS = new String[] {
-                        "/api/auth/reissue",
-                        "/api/auth/logout",
                         "/api/auth/firebase"
         };
 
