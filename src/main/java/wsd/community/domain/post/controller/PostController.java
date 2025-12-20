@@ -230,7 +230,7 @@ public class PostController {
     }
 
     @PostMapping("/{postId}/pin")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
     @Operation(summary = "게시글 고정 (관리자 전용)", description = "게시글을 고정하거나 고정 해제합니다.")
     @ApiResponse(responseCode = "200", description = "고정 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "게시글 고정 성공 예시", value = """
             {

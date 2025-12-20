@@ -79,7 +79,7 @@ public class ReportController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
     public ResponseEntity<CommonResponse<Page<ReportSummaryResponse>>> getReports(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(required = false) ReportStatus status,
@@ -90,7 +90,7 @@ public class ReportController {
     }
 
     @PostMapping("/{reportId}/process")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
     public ResponseEntity<CommonResponse<ReportDetailResponse>> processReport(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long reportId,

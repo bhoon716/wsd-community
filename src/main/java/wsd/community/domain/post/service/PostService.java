@@ -114,7 +114,7 @@ public class PostService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 
-        if (user.getRole() != UserRole.ADMIN) {
+        if (user.getRole() != UserRole.ADMIN && user.getRole() != UserRole.OWNER) {
             throw new CustomException(ErrorCode.NOT_ADMIN);
         }
 
@@ -134,7 +134,7 @@ public class PostService {
     }
 
     private void validateAdminRole(User user, PostType postType) {
-        if (postType == PostType.NOTICE && user.getRole() != UserRole.ADMIN) {
+        if (postType == PostType.NOTICE && user.getRole() != UserRole.ADMIN && user.getRole() != UserRole.OWNER) {
             throw new CustomException(ErrorCode.NOT_ADMIN);
         }
     }

@@ -71,7 +71,7 @@ public class ReportService {
                 .orElseThrow(() -> new CustomException(ErrorCode.REPORT_NOT_FOUND));
 
         if (!report.reporterId().equals(currentUser.getId())
-                && (currentUser.getRole() != UserRole.ADMIN)) {
+                && (currentUser.getRole() != UserRole.ADMIN && currentUser.getRole() != UserRole.OWNER)) {
             throw new CustomException(ErrorCode.FORBIDDEN);
         }
 
@@ -158,7 +158,7 @@ public class ReportService {
     }
 
     private void validateAdmin(User user) {
-        if (user.getRole() != UserRole.ADMIN) {
+        if (user.getRole() != UserRole.ADMIN && user.getRole() != UserRole.OWNER) {
             throw new CustomException(ErrorCode.NOT_ADMIN);
         }
     }
