@@ -207,8 +207,8 @@ class UserServiceTest {
             UserResponse response = userService.getUser(userId);
 
             // then
-            assertThat(response.getEmail()).isEqualTo(user.getEmail());
-            assertThat(response.getName()).isEqualTo(user.getName());
+            assertThat(response.email()).isEqualTo(user.getEmail());
+            assertThat(response.name()).isEqualTo(user.getName());
         }
 
         @Test

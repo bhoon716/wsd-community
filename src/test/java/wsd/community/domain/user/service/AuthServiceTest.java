@@ -70,8 +70,8 @@ class AuthServiceTest {
         LoginResponse response = authService.reissue(new ReissueRequest(refreshToken));
 
         // then
-        assertThat(response.getAccessToken()).isEqualTo(newAccessToken);
-        assertThat(response.getRefreshToken()).isEqualTo(newRefreshToken);
+        assertThat(response.accessToken()).isEqualTo(newAccessToken);
+        assertThat(response.refreshToken()).isEqualTo(newRefreshToken);
 
         verify(redisService).setValues(eq(REDIS_RT_PREFIX + email), eq(newRefreshToken), any());
     }
