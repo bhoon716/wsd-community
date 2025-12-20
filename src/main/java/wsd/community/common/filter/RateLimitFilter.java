@@ -1,7 +1,6 @@
 package wsd.community.common.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -16,9 +15,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import wsd.community.common.config.RateLimitConfig;
+
 import wsd.community.common.error.ErrorCode;
 import wsd.community.common.response.ErrorResponse;
+import wsd.community.config.RateLimitConfig;
 
 @Component
 @RequiredArgsConstructor
