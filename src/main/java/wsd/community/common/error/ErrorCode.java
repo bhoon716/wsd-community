@@ -20,6 +20,7 @@ public enum ErrorCode {
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "A004", "만료된 토큰입니다."),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, "A005", "리프레시 토큰을 찾을 수 없습니다."),
     NOT_ADMIN(HttpStatus.FORBIDDEN, "A006", "관리자 권한이 필요합니다."),
+    NOT_OWNER(HttpStatus.FORBIDDEN, "A007", "오너 권한이 필요합니다."),
 
     // Post
     POST_NOT_FOUND(HttpStatus.NOT_FOUND, "P001", "게시글을 찾을 수 없습니다."),
@@ -42,7 +43,14 @@ public enum ErrorCode {
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G001", "내부 서버 오류가 발생했습니다."),
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "G002", "잘못된 입력값입니다."),
     NOT_FOUND(HttpStatus.NOT_FOUND, "G003", "요청한 리소스를 찾을 수 없습니다."),
-    TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "G004", "요청 횟수가 초과되었습니다.");
+    TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "G004", "요청 횟수가 초과되었습니다."),
+
+    // Role Change
+    CANNOT_SET_OWNER_ROLE(HttpStatus.BAD_REQUEST, "U004", "오너 역할로 변경할 수 없습니다."),
+    CANNOT_DEMOTE_LAST_ADMIN(HttpStatus.CONFLICT, "U005", "마지막 관리자는 강등할 수 없습니다."),
+    CANNOT_DEMOTE_LAST_OWNER(HttpStatus.CONFLICT, "U006", "마지막 오너는 강등할 수 없습니다."),
+    CANNOT_CHANGE_SELF_ROLE(HttpStatus.BAD_REQUEST, "U007", "본인의 역할은 변경할 수 없습니다."),
+    CANNOT_MODIFY_OWNER(HttpStatus.BAD_REQUEST, "U008", "오너의 역할은 변경할 수 없습니다.");
 
     private final HttpStatus status;
     private final String code;

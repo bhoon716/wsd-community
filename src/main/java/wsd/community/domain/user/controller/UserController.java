@@ -58,4 +58,22 @@ public class UserController {
         userService.withdraw(userDetails.getUserId());
         return CommonResponse.noContent("회원 탈퇴 성공");
     }
+
+    @org.springframework.web.bind.annotation.PutMapping("/{userId}/role")
+    @Operation(summary = "회원 역할 변경 (OWNER 전용)", description = "특정 회원의 역할을 변경합니다.")
+    @ApiResponse(responseCode = "200", description = "역할 변경 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "역할 변경 성공 예시", value = """
+            {
+                "isSuccess": true,
+                "message": "회원 역할 변경 성공",
+                "payload": null
+            }
+            """)))
+    public ResponseEntity<CommonResponse<Void>> changeRole(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @org.springframework.web.bind.annotation.PathVariable Long userId,
+            @org.springframework.web.bind.annotation.RequestBody wsd.community.domain.user.request.UserRoleChangeRequest request) {
+        userService.changeRole(userDetails.getUserId(), userId, request.role());
+        return CommonResponse.ok(null, "회원 역할 변경 성공");
+    }
+
 }

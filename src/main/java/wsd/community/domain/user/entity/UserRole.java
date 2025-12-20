@@ -2,8 +2,10 @@ package wsd.community.domain.user.entity;
 
 public enum UserRole {
 
-    USER,
-    ADMIN;
+    OWNER,
+    ADMIN,
+    USER
+    ;
 
     public String getKey() {
         return "ROLE_" + name();
