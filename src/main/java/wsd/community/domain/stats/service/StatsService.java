@@ -7,7 +7,9 @@ import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import wsd.community.domain.comment.repository.CommentRepository;
 import wsd.community.domain.post.repository.PostRepository;
+import wsd.community.domain.stats.response.TopCommenterResponse;
 import wsd.community.domain.stats.response.TopWriterResponse;
 
 @Service
@@ -16,6 +18,7 @@ import wsd.community.domain.stats.response.TopWriterResponse;
 public class StatsService {
 
     private final PostRepository postRepository;
+    private final CommentRepository commentRepository;
 
     public List<TopWriterResponse> getTopWriters(int limit, int days) {
         LocalDateTime endDate = LocalDateTime.now();
@@ -38,5 +41,28 @@ public class StatsService {
         }
 
         return topWriters;
+    }
+
+    public List<TopCommenterResponse> getTopCommenters(int limit, int days) {
+        LocalDateTime endDate = LocalDateTime.now();
+        LocalDateTime startDate = endDate.minusDays(days);
+
+        List<TopCommenterResponse> topCommenters = commentRepository.findTopCommenters(startDate, endDate, limit);
+
+        int rank = 0;
+        Long prevCount = null;
+
+        for (int i = 0; i < topCommenters.size(); i++) {
+            TopCommenterResponse cur = topCommenters.get(i);
+            Long curCount = cur.getCommentCount();
+
+            if (i == 0 || !Objects.equals(curCount, prevCount)) {
+                rank = i + 1;
+                prevCount = curCount;
+            }
+            cur.setRank(rank);
+        }
+
+        return topCommenters;
     }
 }

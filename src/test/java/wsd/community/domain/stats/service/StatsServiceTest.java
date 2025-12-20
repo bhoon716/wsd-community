@@ -14,7 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import wsd.community.domain.comment.repository.CommentRepository;
 import wsd.community.domain.post.repository.PostRepository;
+import wsd.community.domain.stats.response.TopCommenterResponse;
 import wsd.community.domain.stats.response.TopWriterResponse;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,8 +28,11 @@ class StatsServiceTest {
     @Mock
     private PostRepository postRepository;
 
+    @Mock
+    private CommentRepository commentRepository;
+
     @Test
-    @DisplayName("가장 글을 많이 쓴 유저 목록 조회 및 순위 부여 성공")
+    @DisplayName("공동 순위 부여 성공 (Top Writers)")
     void getTopWriters() {
         // Given
         int limit = 5;
@@ -59,5 +64,40 @@ class StatsServiceTest {
         assertThat(result.get(2).getUsername()).isEqualTo("User3");
 
         verify(postRepository).findTopWriters(any(LocalDateTime.class), any(LocalDateTime.class), eq(limit));
+    }
+
+    @Test
+    @DisplayName("공동 순위 부여 성공 (Top Commenters)")
+    void getTopCommenters() {
+        // Given
+        int limit = 5;
+        int days = 7;
+
+        TopCommenterResponse commenter1 = new TopCommenterResponse(1L, "User1", "user1@example.com", 15L);
+        TopCommenterResponse commenter2 = new TopCommenterResponse(2L, "User2", "user2@example.com", 15L);
+        TopCommenterResponse commenter3 = new TopCommenterResponse(3L, "User3", "user3@example.com", 8L);
+
+        List<TopCommenterResponse> mockResponse = List.of(commenter1, commenter2, commenter3);
+
+        given(commentRepository.findTopCommenters(any(LocalDateTime.class), any(LocalDateTime.class), eq(limit)))
+                .willReturn(mockResponse);
+
+        // When
+        List<TopCommenterResponse> result = statsService.getTopCommenters(limit, days);
+
+        // Then
+        assertThat(result).hasSize(3);
+
+        // Verify Ranking: 1, 1, 3
+        assertThat(result.get(0).getRank()).isEqualTo(1);
+        assertThat(result.get(0).getUsername()).isEqualTo("User1");
+
+        assertThat(result.get(1).getRank()).isEqualTo(1);
+        assertThat(result.get(1).getUsername()).isEqualTo("User2");
+
+        assertThat(result.get(2).getRank()).isEqualTo(3);
+        assertThat(result.get(2).getUsername()).isEqualTo("User3");
+
+        verify(commentRepository).findTopCommenters(any(LocalDateTime.class), any(LocalDateTime.class), eq(limit));
     }
 }
