@@ -1,19 +1,9 @@
 package wsd.community.domain.user.request;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
 @Schema(description = "토큰 재발급 요청 DTO")
-public class ReissueRequest {
-
-    @NotBlank(message = "Refresh Token은 필수입니다.")
-    @Schema(description = "Refresh Token", example = "eyJhbGciOiJIUzI1NiJ9...")
-    private String refreshToken;
+public record ReissueRequest(
+        @NotBlank(message = "Refresh Token은 필수입니다.") @Schema(description = "Refresh Token", example = "eyJhbGciOiJIUzI1NiJ9...") String refreshToken) {
 }
