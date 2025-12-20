@@ -12,7 +12,7 @@ import wsd.community.domain.post.entity.PostLike;
 import wsd.community.domain.post.repository.PostLikeRepository;
 import wsd.community.domain.post.repository.PostRepository;
 import wsd.community.domain.post.request.PostCreateRequest;
-import wsd.community.domain.post.request.PostSearchCondition;
+import wsd.community.domain.post.request.PostSearchRequest;
 import wsd.community.domain.post.request.PostUpdateRequest;
 import wsd.community.domain.post.response.PostDetailResponse;
 import wsd.community.domain.post.response.PostSummaryResponse;
@@ -41,7 +41,7 @@ public class PostService {
         return PostDetailResponse.from(post, comments);
     }
 
-    public Page<PostSummaryResponse> searchPosts(PostSearchCondition condition, Pageable pageable) {
+    public Page<PostSummaryResponse> searchPosts(PostSearchRequest condition, Pageable pageable) {
         return postRepository.search(condition, pageable);
     }
 

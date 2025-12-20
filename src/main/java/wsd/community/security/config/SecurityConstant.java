@@ -12,6 +12,7 @@ public class SecurityConstant {
     public static final String TOKEN_PREFIX = "Bearer ";
     public static final String REFRESH_TOKEN = "refresh_token";
     public static final String AUTHORIZATION = "Authorization";
+    public static final int COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
 
     private SecurityConstant() {
     }

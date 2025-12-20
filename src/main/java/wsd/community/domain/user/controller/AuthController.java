@@ -1,9 +1,10 @@
 package wsd.community.domain.user.controller;
 
+import static wsd.community.security.config.SecurityConstant.*;
+
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,11 +31,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 @Tag(name = "Auth", description = "로그인 / 로그아웃 / 토큰 재발급")
 public class AuthController {
 
-    private static final String AUTHORIZATION_HEADER = HttpHeaders.AUTHORIZATION;
-    private static final String BEARER_PREFIX = "Bearer ";
-    private static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
-    private static final int COOKIE_MAX_AGE = 7 * 24 * 60 * 60; // 7 days
-
     private final AuthService authService;
 
     @PostMapping("/logout")
@@ -47,9 +43,9 @@ public class AuthController {
             }
             """)))
     public ResponseEntity<CommonResponse<Void>> logout(
-            @RequestHeader(AUTHORIZATION_HEADER) String accessToken,
+            @RequestHeader(AUTHORIZATION) String accessToken,
             HttpServletResponse httpServletResponse) {
-        authService.logout(accessToken.substring(BEARER_PREFIX.length()));
+        authService.logout(accessToken.substring(TOKEN_PREFIX.length()));
         removeRefreshTokenCookie(httpServletResponse);
         return CommonResponse.ok(null, "로그아웃 성공");
     }
@@ -70,12 +66,12 @@ public class AuthController {
     public ResponseEntity<CommonResponse<UserResponse>> loginWithFirebase(
             @RequestBody @Valid FirebaseLoginRequest request,
             HttpServletResponse httpServletResponse) {
-        LoginResponse response = authService.loginWithFirebase(request.getIdToken());
+        LoginResponse response = authService.loginWithFirebase(request.idToken());
 
-        setAccessTokenHeader(httpServletResponse, response.getAccessToken());
-        addRefreshTokenCookie(httpServletResponse, response.getRefreshToken());
+        setAccessTokenHeader(httpServletResponse, response.accessToken());
+        addRefreshTokenCookie(httpServletResponse, response.refreshToken());
 
-        return CommonResponse.ok(response.getUser(), "로그인 성공");
+        return CommonResponse.ok(response.user(), "로그인 성공");
     }
 
     @PostMapping("/reissue")
@@ -92,22 +88,22 @@ public class AuthController {
             }
             """)))
     public ResponseEntity<CommonResponse<UserResponse>> reissue(
-            @CookieValue(REFRESH_TOKEN_COOKIE_NAME) String refreshToken,
+            @CookieValue(REFRESH_TOKEN) String refreshToken,
             HttpServletResponse httpServletResponse) {
         LoginResponse response = authService.reissue(new ReissueRequest(refreshToken));
 
-        setAccessTokenHeader(httpServletResponse, response.getAccessToken());
-        addRefreshTokenCookie(httpServletResponse, response.getRefreshToken());
+        setAccessTokenHeader(httpServletResponse, response.accessToken());
+        addRefreshTokenCookie(httpServletResponse, response.refreshToken());
 
-        return CommonResponse.ok(response.getUser(), "토큰 재발급 성공");
+        return CommonResponse.ok(response.user(), "토큰 재발급 성공");
     }
 
     private void setAccessTokenHeader(HttpServletResponse response, String accessToken) {
-        response.setHeader(AUTHORIZATION_HEADER, BEARER_PREFIX + accessToken);
+        response.setHeader(AUTHORIZATION, TOKEN_PREFIX + accessToken);
     }
 
     private void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken);
+        Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
         cookie.setPath("/");
@@ -116,7 +112,7 @@ public class AuthController {
     }
 
     private void removeRefreshTokenCookie(HttpServletResponse response) {
-        Cookie cookie = new Cookie(REFRESH_TOKEN_COOKIE_NAME, null);
+        Cookie cookie = new Cookie(REFRESH_TOKEN, null);
         cookie.setPath("/");
         cookie.setMaxAge(0);
         response.addCookie(cookie);

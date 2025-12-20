@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import wsd.community.common.response.CommonResponse;
 import wsd.community.domain.post.request.PostCreateRequest;
-import wsd.community.domain.post.request.PostSearchCondition;
+import wsd.community.domain.post.request.PostSearchRequest;
 import wsd.community.domain.post.request.PostUpdateRequest;
 import wsd.community.domain.post.response.PostDetailResponse;
 import wsd.community.domain.post.response.PostSummaryResponse;
@@ -95,7 +95,7 @@ public class PostController {
             }
             """)))
     public ResponseEntity<CommonResponse<Page<PostSummaryResponse>>> searchPosts(
-            @ModelAttribute PostSearchCondition condition,
+            @ModelAttribute PostSearchRequest condition,
             @PageableDefault(sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<PostSummaryResponse> response = postService.searchPosts(condition, pageable);
         return CommonResponse.ok(response, "게시글 목록 조회 성공");

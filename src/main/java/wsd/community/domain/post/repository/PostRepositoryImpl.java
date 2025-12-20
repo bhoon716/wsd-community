@@ -19,7 +19,7 @@ import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 import wsd.community.domain.post.entity.PostType;
-import wsd.community.domain.post.request.PostSearchCondition;
+import wsd.community.domain.post.request.PostSearchRequest;
 import wsd.community.domain.post.response.PostSummaryResponse;
 import wsd.community.domain.post.response.QPostSummaryResponse;
 import wsd.community.domain.stats.response.QTopWriterResponse;
@@ -32,7 +32,7 @@ public class PostRepositoryImpl implements PostRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Page<PostSummaryResponse> search(PostSearchCondition condition, Pageable pageable) {
+    public Page<PostSummaryResponse> search(PostSearchRequest condition, Pageable pageable) {
         BooleanExpression[] where = {
                 typeEq(condition.type()),
                 titleContains(condition.keyword())

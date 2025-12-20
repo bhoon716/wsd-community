@@ -67,7 +67,7 @@ public class AuthService {
 
     public LoginResponse reissue(ReissueRequest request) {
         log.info("토큰 재발급 요청");
-        String refreshToken = request.getRefreshToken();
+        String refreshToken = request.refreshToken();
 
         if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
