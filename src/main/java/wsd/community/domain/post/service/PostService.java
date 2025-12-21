@@ -102,27 +102,28 @@ public class PostService {
     }
 
     @Transactional
-    public void toggleLike(Long userId, Long postId) {
+    public boolean toggleLike(Long userId, Long postId) {
         Post post = findPostById(postId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
 
-        postLikeRepository.findByUserAndPost(user, post)
-                .ifPresentOrElse(
-                        postLike -> {
-                            postLikeRepository.delete(postLike);
-                            post.decreaseLikeCount();
-                            log.info("게시글 좋아요 취소: userId={}, postId={}", userId, postId);
-                        },
-                        () -> {
-                            postLikeRepository.save(new PostLike(user, post));
-                            post.increaseLikeCount();
-                            log.info("게시글 좋아요 추가: userId={}, postId={}", userId, postId);
-                        });
+        return postLikeRepository.findByUserAndPost(user, post)
+                .map(postLike -> {
+                    postLikeRepository.delete(postLike);
+                    post.decreaseLikeCount();
+                    log.info("게시글 좋아요 취소: userId={}, postId={}", userId, postId);
+                    return false;
+                })
+                .orElseGet(() -> {
+                    postLikeRepository.save(new PostLike(user, post));
+                    post.increaseLikeCount();
+                    log.info("게시글 좋아요 추가: userId={}, postId={}", userId, postId);
+                    return true;
+                });
     }
 
     @Transactional
-    public void togglePin(Long userId, Long postId) {
+    public boolean togglePin(Long userId, Long postId) {
         log.info("게시글 고정 토글 요청: userId={}, postId={}", userId, postId);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_FOUND_USER));
@@ -134,6 +135,7 @@ public class PostService {
         Post post = findPostById(postId);
         post.togglePin();
         log.info("게시글 고정 토글 완료: postId={}, isPinned={}", postId, post.isPinned());
+        return post.isPinned();
     }
 
     private Post findPostById(Long postId) {

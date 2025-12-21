@@ -75,22 +75,23 @@ public class CommentService {
     }
 
     @Transactional
-    public void toggleLike(Long userId, Long commentId) {
+    public boolean toggleLike(Long userId, Long commentId) {
         Comment comment = findCommentById(commentId);
         User user = findUserById(userId);
 
-        commentLikeRepository.findByUserAndComment(user, comment)
-                .ifPresentOrElse(
-                        like -> {
-                            commentLikeRepository.delete(like);
-                            comment.decreaseLikeCount();
-                            log.info("댓글 좋아요 취소: userId={}, commentId={}", userId, commentId);
-                        },
-                        () -> {
-                            commentLikeRepository.save(new CommentLike(user, comment));
-                            comment.increaseLikeCount();
-                            log.info("댓글 좋아요 추가: userId={}, commentId={}", userId, commentId);
-                        });
+        return commentLikeRepository.findByUserAndComment(user, comment)
+                .map(like -> {
+                    commentLikeRepository.delete(like);
+                    comment.decreaseLikeCount();
+                    log.info("댓글 좋아요 취소: userId={}, commentId={}", userId, commentId);
+                    return false;
+                })
+                .orElseGet(() -> {
+                    commentLikeRepository.save(new CommentLike(user, comment));
+                    comment.increaseLikeCount();
+                    log.info("댓글 좋아요 추가: userId={}, commentId={}", userId, commentId);
+                    return true;
+                });
     }
 
     private User findUserById(Long userId) {

@@ -9,9 +9,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.HashMap;
-import java.util.Map;
 import wsd.community.common.error.ErrorCode;
+import wsd.community.common.response.ErrorResponse;
 
 @Component
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
@@ -22,14 +21,12 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     public void handle(HttpServletRequest request, HttpServletResponse response,
             AccessDeniedException accessDeniedException) throws IOException, ServletException {
 
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        ErrorCode errorCode = ErrorCode.FORBIDDEN;
+        response.setStatus(errorCode.getStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("code", ErrorCode.FORBIDDEN.getCode());
-        body.put("message", ErrorCode.FORBIDDEN.getMessage());
-
-        objectMapper.writeValue(response.getWriter(), body);
+        ErrorResponse errorResponse = ErrorResponse.of(errorCode, request.getRequestURI(), null);
+        objectMapper.writeValue(response.getWriter(), errorResponse);
     }
 }

@@ -1,0 +1,1427 @@
+{
+    "info": {
+        "_postman_id": "wsd-community-security-v4-openapi",
+        "name": "WSD Community API",
+        "description": "WSD Community API Postman Collection",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "const requestName = pm.info.requestName;",
+                    "const skipAuth = ['Reissue Token', 'Logout', 'Login as USER', 'Login as ADMIN', 'Login as OWNER'];",
+                    "",
+                    "if (!skipAuth.includes(requestName)) {",
+                    "  const accessToken = pm.collectionVariables.get(\"accessToken\");",
+                    "  if (accessToken) {",
+                    "    pm.request.headers.add({",
+                    "      key: \"Authorization\",",
+                    "      value: `Bearer ${accessToken}`",
+                    "    });",
+                    "  }",
+                    "}"
+                ]
+            }
+        }
+    ],
+    "item": [
+        {
+            "name": "01. Auth",
+            "item": [
+                {
+                    "name": "Login as USER",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const email = \"user1@test.com\";",
+                                    "const password = \"password1234\";",
+                                    "const apiKey = pm.collectionVariables.get(\"firebase_api_key\");",
+                                    "",
+                                    "const firebaseUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;",
+                                    "",
+                                    "pm.sendRequest({",
+                                    "  url: firebaseUrl,",
+                                    "  method: \"POST\",",
+                                    "  header: { \"Content-Type\": \"application/json\" },",
+                                    "  body: {",
+                                    "    mode: \"raw\",",
+                                    "    raw: JSON.stringify({ email, password, returnSecureToken: true })",
+                                    "  }",
+                                    "}, function (err, res) {",
+                                    "  if (err || res.code !== 200) return;",
+                                    "  let json;",
+                                    "  try { json = res.json(); } catch (e) { return; }",
+                                    "  if (json.idToken) {",
+                                    "    pm.collectionVariables.set(\"firebase_id_token_user\", json.idToken);",
+                                    "  }",
+                                    "});"
+                                ]
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"로그인 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});",
+                                    "",
+                                    "const authHeader = pm.response.headers.get(\"Authorization\");",
+                                    "if (authHeader && authHeader.startsWith(\"Bearer \")) {",
+                                    "  const accessToken = authHeader.substring(7);",
+                                    "  pm.collectionVariables.set(\"accessToken\", accessToken);",
+                                    "  pm.collectionVariables.set(\"accessToken_user\", accessToken);",
+                                    "  console.log(\"✅ Access Token (USER) 저장 완료\");",
+                                    "}",
+                                    "",
+                                    "let json = {};",
+                                    "try { json = pm.response.json(); } catch (e) {}",
+                                    "",
+                                    "const userId = (json.payload && json.payload.userId) || (json.data && json.data.userId);",
+                                    "if (userId !== undefined && userId !== null) {",
+                                    "  pm.collectionVariables.set(\"userId\", String(userId));",
+                                    "  console.log(\"✅ User ID 저장:\", userId);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"idToken\": \"{{firebase_id_token_user}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/auth/firebase"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login as ADMIN",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const email = \"admin@test.com\";",
+                                    "const password = \"password1234\";",
+                                    "const apiKey = pm.collectionVariables.get(\"firebase_api_key\");",
+                                    "",
+                                    "const firebaseUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;",
+                                    "",
+                                    "console.log(\"ADMIN 로그인 시도:\", email);",
+                                    "",
+                                    "pm.sendRequest({",
+                                    "  url: firebaseUrl,",
+                                    "  method: \"POST\",",
+                                    "  header: { \"Content-Type\": \"application/json\" },",
+                                    "  body: {",
+                                    "    mode: \"raw\",",
+                                    "    raw: JSON.stringify({ email, password, returnSecureToken: true })",
+                                    "  }",
+                                    "}, function (err, res) {",
+                                    "  if (err) {",
+                                    "    console.error(\"Firebase 요청 에러:\", err);",
+                                    "    return;",
+                                    "  }",
+                                    "  if (res.code !== 200) {",
+                                    "    console.error(\"Firebase 로그인 실패:\", res.text());",
+                                    "    return;",
+                                    "  }",
+                                    "  let json;",
+                                    "  try { json = res.json(); } catch (e) { return; }",
+                                    "  if (json.idToken) {",
+                                    "    pm.collectionVariables.set(\"firebase_id_token_admin\", json.idToken);",
+                                    "    console.log(\"✅ ADMIN 토큰 발급 성공\");",
+                                    "  }",
+                                    "});"
+                                ]
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"로그인 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});",
+                                    "",
+                                    "const authHeader = pm.response.headers.get(\"Authorization\");",
+                                    "if (authHeader && authHeader.startsWith(\"Bearer \")) {",
+                                    "  const accessToken = authHeader.substring(7);",
+                                    "  pm.collectionVariables.set(\"accessToken\", accessToken);",
+                                    "  pm.collectionVariables.set(\"accessToken_admin\", accessToken);",
+                                    "  console.log(\"✅ Access Token (ADMIN) 저장 완료\");",
+                                    "}",
+                                    "",
+                                    "let json = {};",
+                                    "try { json = pm.response.json(); } catch (e) {}",
+                                    "",
+                                    "const userId = (json.payload && json.payload.userId) || (json.data && json.data.userId);",
+                                    "if (userId !== undefined && userId !== null) {",
+                                    "  pm.collectionVariables.set(\"userId\", String(userId));",
+                                    "  console.log(\"✅ User ID 저장:\", userId);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"idToken\": \"{{firebase_id_token_admin}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/auth/firebase"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login as OWNER",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const email = \"owner@test.com\";",
+                                    "const password = \"password1234\";",
+                                    "const apiKey = pm.collectionVariables.get(\"firebase_api_key\");",
+                                    "",
+                                    "const firebaseUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;",
+                                    "",
+                                    "console.log(\"OWNER 로그인 시도:\", email);",
+                                    "",
+                                    "pm.sendRequest({",
+                                    "  url: firebaseUrl,",
+                                    "  method: \"POST\",",
+                                    "  header: { \"Content-Type\": \"application/json\" },",
+                                    "  body: {",
+                                    "    mode: \"raw\",",
+                                    "    raw: JSON.stringify({ email, password, returnSecureToken: true })",
+                                    "  }",
+                                    "}, function (err, res) {",
+                                    "  if (err) {",
+                                    "    console.error(\"Firebase 요청 에러:\", err);",
+                                    "    return;",
+                                    "  }",
+                                    "  if (res.code !== 200) {",
+                                    "    console.error(\"Firebase 로그인 실패:\", res.text());",
+                                    "    return;",
+                                    "  }",
+                                    "  let json;",
+                                    "  try { json = res.json(); } catch (e) { return; }",
+                                    "  if (json.idToken) {",
+                                    "    pm.collectionVariables.set(\"firebase_id_token_owner\", json.idToken);",
+                                    "    console.log(\"✅ OWNER 토큰 발급 성공\");",
+                                    "  }",
+                                    "});"
+                                ]
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"로그인 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});",
+                                    "",
+                                    "const authHeader = pm.response.headers.get(\"Authorization\");",
+                                    "if (authHeader && authHeader.startsWith(\"Bearer \")) {",
+                                    "  const accessToken = authHeader.substring(7);",
+                                    "  pm.collectionVariables.set(\"accessToken\", accessToken);",
+                                    "  pm.collectionVariables.set(\"accessToken_owner\", accessToken);",
+                                    "  console.log(\"✅ Access Token (OWNER) 저장 완료\");",
+                                    "}",
+                                    "",
+                                    "let json = {};",
+                                    "try { json = pm.response.json(); } catch (e) {}",
+                                    "",
+                                    "const userId = (json.payload && json.payload.userId) || (json.data && json.data.userId);",
+                                    "if (userId !== undefined && userId !== null) {",
+                                    "  pm.collectionVariables.set(\"userId\", String(userId));",
+                                    "  console.log(\"✅ User ID 저장:\", userId);",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"idToken\": \"{{firebase_id_token_owner}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/auth/firebase"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reissue Token",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"토큰 재발급 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});",
+                                    "",
+                                    "const authHeader = pm.response.headers.get(\"Authorization\");",
+                                    "if (authHeader && authHeader.startsWith(\"Bearer \")) {",
+                                    "  const accessToken = authHeader.substring(7);",
+                                    "  pm.collectionVariables.set(\"accessToken\", accessToken);",
+                                    "  console.log(\"✅ Access Token 재발급 완료\");",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/auth/reissue"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Logout",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"로그아웃 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});",
+                                    "if (pm.response.code === 200) {",
+                                    "  pm.collectionVariables.unset(\"accessToken\");",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/auth/logout"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "02. Users",
+            "item": [
+                {
+                    "name": "Get My Profile",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"조회 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/users/me"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Withdraw",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"회원 탈퇴 204\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(204);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/users/me"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Change Role (OWNER Only)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"역할 변경 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"role\": \"ADMIN\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/users/{{targetUserId}}/role"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "03. Posts",
+            "item": [
+                {
+                    "name": "Search Posts",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"조회 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/posts?page=0&size=10&sort=createdAt,desc&type=GENERAL&keyword="
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Post Detail",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"조회 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/posts/{{postId}}"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get My Posts",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"조회 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/posts/my?page=0&size=10&sort=createdAt,desc"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Post",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const ts = new Date().toISOString();",
+                                    "pm.collectionVariables.set(\"postTitle\", `Test Post @ ${ts}`);",
+                                    "pm.collectionVariables.set(\"postContent\", `Test Content @ ${ts}`);"
+                                ]
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"게시글 생성 201\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(201);",
+                                    "});",
+                                    "",
+                                    "let json = {};",
+                                    "try { json = pm.response.json(); } catch (e) {}",
+                                    "",
+                                    "const postId = (json.data !== undefined ? json.data : null) || (json.payload && json.payload.id) || (json.payload && json.payload.postId);",
+                                    "if (postId) {",
+                                    "  pm.collectionVariables.set(\"postId\", String(postId));",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"{{postTitle}}\",\n  \"content\": \"{{postContent}}\",\n  \"type\": \"GENERAL\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/posts"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Post",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const ts = new Date().toISOString();",
+                                    "pm.collectionVariables.set(\"updateTitle\", `Updated Title @ ${ts}`);",
+                                    "pm.collectionVariables.set(\"updateContent\", `Updated Content @ ${ts}`);",
+                                    "pm.collectionVariables.set(\"updateType\", \"QNA\");"
+                                ]
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"게시글 수정 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"title\": \"{{updateTitle}}\",\n  \"content\": \"{{updateContent}}\",\n  \"type\": \"{{updateType}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/posts/{{postId}}"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Toggle Like",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"좋아요 토글 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/posts/{{postId}}/likes"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Toggle Pin (Admin Only)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"게시글 고정/해제 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/posts/{{postId}}/pin"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Post",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"게시글 삭제 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/posts/{{postId}}"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "04. Comments",
+            "item": [
+                {
+                    "name": "Get Comments",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"조회 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/posts/{{postId}}/comments"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Comment",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const ts = new Date().toISOString();",
+                                    "pm.collectionVariables.set(\"commentContent\", `Test Comment @ ${ts}`);"
+                                ]
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"댓글 생성 201\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(201);",
+                                    "});",
+                                    "",
+                                    "let json = {};",
+                                    "try { json = pm.response.json(); } catch (e) {}",
+                                    "",
+                                    "const commentId = (json.data !== undefined ? json.data : null) || (json.payload && json.payload.id) || json.commentId;",
+                                    "if (commentId) {",
+                                    "  pm.collectionVariables.set(\"commentId\", String(commentId));",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"content\": \"{{commentContent}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/posts/{{postId}}/comments"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Comment",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const ts = new Date().toISOString();",
+                                    "pm.collectionVariables.set(\"updateCommentContent\", `Updated Comment @ ${ts}`);"
+                                ]
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"댓글 수정 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"content\": \"{{updateCommentContent}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/comments/{{commentId}}"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Toggle Comment Like",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"댓글 좋아요 토글 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/comments/{{commentId}}/likes"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Comment",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"댓글 삭제 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/comments/{{commentId}}"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "05. Reports",
+            "item": [
+                {
+                    "name": "Create Report",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const ts = new Date().toISOString();",
+                                    "pm.collectionVariables.set(\"reportTargetId\", pm.collectionVariables.get(\"reportTargetId\") || \"11\");",
+                                    "pm.collectionVariables.set(\"reportType\", pm.collectionVariables.get(\"reportType\") || \"POST\");",
+                                    "pm.collectionVariables.set(\"reportReason\", pm.collectionVariables.get(\"reportReason\") || \"SPAM\");",
+                                    "pm.collectionVariables.set(\"reportDescription\", `Reported @ ${ts}`);"
+                                ]
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"신고 생성 201\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(201);",
+                                    "});",
+                                    "",
+                                    "let json = {};",
+                                    "try { json = pm.response.json(); } catch (e) {}",
+                                    "",
+                                    "const reportId = (json.payload && json.payload.id) || (json.data && json.data.id) || json.reportId;",
+                                    "if (reportId) {",
+                                    "  pm.collectionVariables.set(\"reportId\", String(reportId));",
+                                    "}"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"targetId\": {{reportTargetId}},\n  \"type\": \"{{reportType}}\",\n  \"reason\": \"{{reportReason}}\",\n  \"description\": \"{{reportDescription}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/reports"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Reports (Admin Only)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"조회 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/reports?page=0&size=10&sort=reportedAt,desc&status=PENDING&type="
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get My Reports",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"조회 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/reports/me?page=0&size=10&sort=reportedAt,desc"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Report Detail",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"조회 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/reports/{{reportId}}"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Report",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const ts = new Date().toISOString();",
+                                    "pm.collectionVariables.set(\"updateReportReason\", `Updated Reason @ ${ts}`);",
+                                    "pm.collectionVariables.set(\"updateReportDescription\", `Updated Description @ ${ts}`);"
+                                ]
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"신고 수정 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"reason\": \"{{updateReportReason}}\",\n  \"description\": \"{{updateReportDescription}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/reports/{{reportId}}"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Cancel Report",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"신고 취소 204\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(204);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/reports/{{reportId}}"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Process Report (Admin Only)",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const ts = new Date().toISOString();",
+                                    "pm.collectionVariables.set(\"reportAction\", pm.collectionVariables.get(\"reportAction\") || \"HIDE\");",
+                                    "pm.collectionVariables.set(\"reportProcessReason\", `Process Reason @ ${ts}`);"
+                                ]
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"신고 처리 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json",
+                                "type": "text"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"action\": \"{{reportAction}}\",\n  \"reason\": \"{{reportProcessReason}}\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{baseUrl}}/api/reports/{{reportId}}/process"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "06. Stats",
+            "item": [
+                {
+                    "name": "Top Writers",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"조회 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/stats/users/top-writers?limit=10&days=30"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Top Commenters",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"조회 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{baseUrl}}/api/stats/users/top-commenters?limit=10&days=30"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "07. System",
+            "item": [
+                {
+                    "name": "Health Check",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"헬스 체크 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": "{{baseUrl}}/health"
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "key": "token",
+                "value": "{{accessToken}}",
+                "type": "string"
+            }
+        ]
+    },
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "pm.variables.set(\"requestTimestamp\", new Date().toISOString());",
+                    "",
+                    "const segments = pm.request.url.path || [];",
+                    "const path = \"/\" + segments.join(\"/\");",
+                    "const method = pm.request.method;",
+                    "const token = pm.collectionVariables.get(\"accessToken\");",
+                    "",
+                    "const isPostList = (method === \"GET\" && path === \"/api/posts\");",
+                    "const isPostDetail = (method === \"GET\" && segments[0] === \"api\" && segments[1] === \"posts\" && segments.length === 3 && segments[2] !== \"my\");",
+                    "const isStats = (method === \"GET\" && segments[0] === \"api\" && segments[1] === \"stats\");",
+                    "const isHealth = (method === \"GET\" && path === \"/health\");",
+                    "const isAuthPublic = (method === \"POST\" && (path === \"/api/auth/firebase\" || path === \"/api/auth/reissue\"));",
+                    "",
+                    "const isPublic = isPostList || isPostDetail || isStats || isHealth || isAuthPublic;",
+                    "",
+                    "if (isPublic && (!token || token.trim() === \"\")) {",
+                    "  pm.request.headers.remove(\"Authorization\");",
+                    "}"
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "pm.collectionVariables.set(\"lastStatus\", String(pm.response.code));",
+                    "pm.test(\"응답 시간 < 3초\", function () {",
+                    "  pm.expect(pm.response.responseTime).to.be.below(3000);",
+                    "});",
+                    "",
+                    "const ct = (pm.response.headers.get(\"Content-Type\") || \"\").toLowerCase();",
+                    "if (ct.includes(\"application/json\") && pm.response.text()) {",
+                    "  try {",
+                    "    const json = pm.response.json();",
+                    "    pm.collectionVariables.set(\"lastJson\", JSON.stringify(json));",
+                    "",
+                    "    if (json.code) {",
+                    "      pm.test(\"code 필드 존재\", function () {",
+                    "        pm.expect(json.code).to.be.a(\"string\");",
+                    "      });",
+                    "    }",
+                    "    if (json.isSuccess !== undefined) {",
+                    "      pm.test(\"isSuccess boolean\", function () {",
+                    "        pm.expect(json.isSuccess).to.be.a(\"boolean\");",
+                    "      });",
+                    "    }",
+                    "    if (json.status) {",
+                    "      pm.test(\"status 필드 존재\", function () {",
+                    "        pm.expect(json.status).to.be.a(\"string\");",
+                    "      });",
+                    "    }",
+                    "  } catch (e) {}",
+                    "} else {",
+                    "  pm.collectionVariables.unset(\"lastJson\");",
+                    "}"
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:8080",
+            "type": "string"
+        },
+        {
+            "key": "accessToken",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "userId",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "targetUserId",
+            "value": "2",
+            "type": "string"
+        },
+        {
+            "key": "postId",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "postTitle",
+            "value": "테스트 게시글 제목",
+            "type": "string"
+        },
+        {
+            "key": "postContent",
+            "value": "테스트 게시글 내용입니다.",
+            "type": "string"
+        },
+        {
+            "key": "updateTitle",
+            "value": "수정된 제목",
+            "type": "string"
+        },
+        {
+            "key": "updateContent",
+            "value": "수정된 내용입니다.",
+            "type": "string"
+        },
+        {
+            "key": "updateType",
+            "value": "QNA",
+            "type": "string"
+        },
+        {
+            "key": "commentId",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "commentContent",
+            "value": "테스트 댓글입니다.",
+            "type": "string"
+        },
+        {
+            "key": "updateCommentContent",
+            "value": "수정된 댓글입니다.",
+            "type": "string"
+        },
+        {
+            "key": "reportId",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "reportTargetId",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "reportType",
+            "value": "POST",
+            "type": "string"
+        },
+        {
+            "key": "reportReason",
+            "value": "SPAM",
+            "type": "string"
+        },
+        {
+            "key": "reportDescription",
+            "value": "스팸 신고 테스트",
+            "type": "string"
+        },
+        {
+            "key": "updateReportReason",
+            "value": "INAPPROPRIATE",
+            "type": "string"
+        },
+        {
+            "key": "updateReportDescription",
+            "value": "부적절한 내용",
+            "type": "string"
+        },
+        {
+            "key": "reportAction",
+            "value": "HIDE",
+            "type": "string"
+        },
+        {
+            "key": "reportProcessReason",
+            "value": "신고 처리 완료",
+            "type": "string"
+        },
+        {
+            "key": "firebase_api_key",
+            "value": "AIzaSyAp4SfCndDM7B7FZ9ps89rt_IFrvTiLiFg",
+            "type": "string"
+        },
+        {
+            "key": "test_password",
+            "value": "password1234",
+            "type": "string"
+        },
+        {
+            "key": "firebase_id_token_user",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "firebase_id_token_admin",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "firebase_id_token_owner",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "accessToken_user",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "accessToken_admin",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "accessToken_owner",
+            "value": "",
+            "type": "string"
+        }
+    ]
+}
