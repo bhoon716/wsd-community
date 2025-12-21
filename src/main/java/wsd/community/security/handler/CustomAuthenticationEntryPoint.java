@@ -9,9 +9,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.HashMap;
-import java.util.Map;
 import wsd.community.common.error.ErrorCode;
+import wsd.community.common.response.ErrorResponse;
 
 @Component
 public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint {
@@ -22,14 +21,12 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     public void commence(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException authException) throws IOException, ServletException {
 
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
+        response.setStatus(errorCode.getStatus().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
 
-        Map<String, Object> body = new HashMap<>();
-        body.put("code", ErrorCode.UNAUTHORIZED.getCode());
-        body.put("message", ErrorCode.UNAUTHORIZED.getMessage());
-
-        objectMapper.writeValue(response.getWriter(), body);
+        ErrorResponse errorResponse = ErrorResponse.of(errorCode, request.getRequestURI(), null);
+        objectMapper.writeValue(response.getWriter(), errorResponse);
     }
 }

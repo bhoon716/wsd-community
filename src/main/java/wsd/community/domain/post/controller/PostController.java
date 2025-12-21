@@ -232,7 +232,7 @@ public class PostController {
 
     @PostMapping("/{postId}/pin")
     @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
-    @Operation(summary = "게시글 고정 (관리자 전용)", description = "게시글을 고정하거나 고정 해제합니다.")
+    @Operation(summary = "게시글 고정 (관리자 전용)", description = "게시글을 고정하거나 고정 해제합니다. (true: 고정됨, false: 해제됨)")
     @ApiResponse(responseCode = "200", description = "고정 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "게시글 고정 성공 예시", value = """
             {
                 "code": "SUCCESS",
@@ -242,8 +242,8 @@ public class PostController {
     public ResponseEntity<CommonResponse<Void>> togglePin(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long postId) {
-        postService.togglePin(userDetails.getUserId(), postId);
-        return CommonResponse.ok(null, "게시글 고정 성공");
+        boolean isPinned = postService.togglePin(userDetails.getUserId(), postId);
+        return CommonResponse.noContent(isPinned ? "게시글 고정 성공" : "게시글 고정 해제 성공");
     }
 
     @DeleteMapping("/{postId}")
@@ -263,18 +263,17 @@ public class PostController {
     }
 
     @PostMapping("/{id}/likes")
-    @Operation(summary = "게시글 좋아요 토글", description = "게시글에 좋아요를 누르거나 취소합니다.")
+    @Operation(summary = "게시글 좋아요 토글", description = "게시글에 좋아요를 누르거나 취소합니다. (true: 좋아요 설정됨, false: 좋아요 해제됨)")
     @ApiResponse(responseCode = "200", description = "토글 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "좋아요 토글 성공 예시", value = """
             {
                 "code": "SUCCESS",
-                "message": "게시글 좋아요 상태가 변경되었습니다.",
-                "data": null
+                "message": "좋아요 설정 성공"
             }
             """)))
     public ResponseEntity<CommonResponse<Void>> toggleLike(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long id) {
-        postService.toggleLike(userDetails.getUserId(), id);
-        return CommonResponse.noContent("게시글 좋아요 상태가 변경되었습니다.");
+        boolean isLiked = postService.toggleLike(userDetails.getUserId(), id);
+        return CommonResponse.noContent(isLiked ? "좋아요 설정 성공" : "좋아요 취소 성공");
     }
 }
