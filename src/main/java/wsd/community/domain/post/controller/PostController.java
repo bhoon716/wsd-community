@@ -257,8 +257,8 @@ public class PostController {
             """)))
     public ResponseEntity<CommonResponse<Void>> deletePost(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long id) {
-        postService.deletePost(userDetails.getUserId(), id);
+            @PathVariable Long postId) {
+        postService.deletePost(userDetails.getUserId(), postId);
         return CommonResponse.noContent("게시글이 성공적으로 삭제되었습니다.");
     }
 
