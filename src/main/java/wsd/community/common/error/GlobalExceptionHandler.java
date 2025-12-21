@@ -106,7 +106,8 @@ public class GlobalExceptionHandler {
 
         log.warn("[WARN] 데이터 무결성 위반: path={}, message={}", request.getRequestURI(), e.getMessage());
 
-        return buildResponse(ErrorCode.DUPLICATE_REPORT, request.getRequestURI(), null);
+        return buildResponse(ErrorCode.INVALID_INPUT, request.getRequestURI(),
+                detailOrNull("데이터처리 중 충돌이 발생했습니다. (중복 데이터 등)"));
     }
 
     private Map<String, Object> detailOrNull(String detailMessage) {
