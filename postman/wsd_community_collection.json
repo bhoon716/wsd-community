@@ -1,38 +1,17 @@
 {
     "info": {
-        "_postman_id": "wsd-community-security-v4-openapi",
+        "_postman_id": "6eb1097b-0728-4fce-bdec-4f8c7d142dd3",
         "name": "WSD Community API",
         "description": "WSD Community API Postman Collection",
-        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "42838076"
     },
-    "event": [
-        {
-            "listen": "prerequest",
-            "script": {
-                "type": "text/javascript",
-                "exec": [
-                    "const requestName = pm.info.requestName;",
-                    "const skipAuth = ['Reissue Token', 'Logout', 'Login as USER', 'Login as ADMIN', 'Login as OWNER'];",
-                    "",
-                    "if (!skipAuth.includes(requestName)) {",
-                    "  const accessToken = pm.collectionVariables.get(\"accessToken\");",
-                    "  if (accessToken) {",
-                    "    pm.request.headers.add({",
-                    "      key: \"Authorization\",",
-                    "      value: `Bearer ${accessToken}`",
-                    "    });",
-                    "  }",
-                    "}"
-                ]
-            }
-        }
-    ],
     "item": [
         {
-            "name": "01. Auth",
+            "name": "01. 인증",
             "item": [
                 {
-                    "name": "Login as USER",
+                    "name": "일반 유저 로그인",
                     "event": [
                         {
                             "listen": "prerequest",
@@ -113,12 +92,22 @@
                                 }
                             }
                         },
-                        "url": "{{baseUrl}}/api/auth/firebase"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/firebase",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "firebase"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Login as ADMIN",
+                    "name": "관리자 로그인",
                     "event": [
                         {
                             "listen": "prerequest",
@@ -209,12 +198,22 @@
                                 }
                             }
                         },
-                        "url": "{{baseUrl}}/api/auth/firebase"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/firebase",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "firebase"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Login as OWNER",
+                    "name": "소유자 로그인",
                     "event": [
                         {
                             "listen": "prerequest",
@@ -305,12 +304,22 @@
                                 }
                             }
                         },
-                        "url": "{{baseUrl}}/api/auth/firebase"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/firebase",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "firebase"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Reissue Token",
+                    "name": "토큰 재발급",
                     "event": [
                         {
                             "listen": "test",
@@ -337,12 +346,22 @@
                         },
                         "method": "POST",
                         "header": [],
-                        "url": "{{baseUrl}}/api/auth/reissue"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/reissue",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "reissue"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Logout",
+                    "name": "로그아웃",
                     "event": [
                         {
                             "listen": "test",
@@ -362,17 +381,27 @@
                     "request": {
                         "method": "POST",
                         "header": [],
-                        "url": "{{baseUrl}}/api/auth/logout"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/auth/logout",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "auth",
+                                "logout"
+                            ]
+                        }
                     },
                     "response": []
                 }
             ]
         },
         {
-            "name": "02. Users",
+            "name": "02. 사용자",
             "item": [
                 {
-                    "name": "Get My Profile",
+                    "name": "내 프로필 조회",
                     "event": [
                         {
                             "listen": "test",
@@ -389,12 +418,22 @@
                     "request": {
                         "method": "GET",
                         "header": [],
-                        "url": "{{baseUrl}}/api/users/me"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/users/me",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users",
+                                "me"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Withdraw",
+                    "name": "회원 탈퇴",
                     "event": [
                         {
                             "listen": "test",
@@ -411,13 +450,35 @@
                     "request": {
                         "method": "DELETE",
                         "header": [],
-                        "url": "{{baseUrl}}/api/users/me"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/users/me",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users",
+                                "me"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Change Role (OWNER Only)",
+                    "name": "역할 변경 (소유자 전용)",
                     "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const token = pm.collectionVariables.get(\"accessToken_owner\");",
+                                    "if (token) {",
+                                    "  pm.request.headers.upsert({ key: \"Authorization\", value: `Bearer ${token}` });",
+                                    "}"
+                                ]
+                            }
+                        },
                         {
                             "listen": "test",
                             "script": {
@@ -448,17 +509,28 @@
                                 }
                             }
                         },
-                        "url": "{{baseUrl}}/api/users/{{targetUserId}}/role"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/users/{{targetUserId}}/role",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "users",
+                                "{{targetUserId}}",
+                                "role"
+                            ]
+                        }
                     },
                     "response": []
                 }
             ]
         },
         {
-            "name": "03. Posts",
+            "name": "03. 게시글",
             "item": [
                 {
-                    "name": "Search Posts",
+                    "name": "게시글 검색",
                     "event": [
                         {
                             "listen": "test",
@@ -475,12 +547,43 @@
                     "request": {
                         "method": "GET",
                         "header": [],
-                        "url": "{{baseUrl}}/api/posts?page=0&size=10&sort=createdAt,desc&type=GENERAL&keyword="
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts?page=0&size=10&sort=createdAt,desc&type=GENERAL&keyword=",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "createdAt,desc"
+                                },
+                                {
+                                    "key": "type",
+                                    "value": "GENERAL"
+                                },
+                                {
+                                    "key": "keyword",
+                                    "value": ""
+                                }
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Get Post Detail",
+                    "name": "게시글 상세 조회",
                     "event": [
                         {
                             "listen": "test",
@@ -497,12 +600,22 @@
                     "request": {
                         "method": "GET",
                         "header": [],
-                        "url": "{{baseUrl}}/api/posts/{{postId}}"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{postId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{postId}}"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Get My Posts",
+                    "name": "내 게시글 조회",
                     "event": [
                         {
                             "listen": "test",
@@ -519,12 +632,36 @@
                     "request": {
                         "method": "GET",
                         "header": [],
-                        "url": "{{baseUrl}}/api/posts/my?page=0&size=10&sort=createdAt,desc"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/my?page=0&size=10&sort=createdAt,desc",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "my"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "createdAt,desc"
+                                }
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Create Post",
+                    "name": "게시글 생성",
                     "event": [
                         {
                             "listen": "prerequest",
@@ -575,12 +712,21 @@
                                 }
                             }
                         },
-                        "url": "{{baseUrl}}/api/posts"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Update Post",
+                    "name": "게시글 수정",
                     "event": [
                         {
                             "listen": "prerequest",
@@ -624,12 +770,22 @@
                                 }
                             }
                         },
-                        "url": "{{baseUrl}}/api/posts/{{postId}}"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{postId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{postId}}"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Toggle Like",
+                    "name": "좋아요 토글",
                     "event": [
                         {
                             "listen": "test",
@@ -638,7 +794,17 @@
                                 "exec": [
                                     "pm.test(\"좋아요 토글 200\", function () {",
                                     "  pm.expect(pm.response.code).to.eql(200);",
-                                    "});"
+                                    "});",
+                                    "",
+                                    "try {",
+                                    "    const json = pm.response.json();",
+                                    "    const expectedMessages = [\"좋아요 설정 성공\", \"좋아요 취소 성공\"];",
+                                    "    if (json.message) {",
+                                    "         pm.test(\"응답 메시지 확인\", function () {",
+                                    "            pm.expect(expectedMessages).to.include(json.message);",
+                                    "         });",
+                                    "    }",
+                                    "} catch(e) {}"
                                 ]
                             }
                         }
@@ -646,13 +812,36 @@
                     "request": {
                         "method": "POST",
                         "header": [],
-                        "url": "{{baseUrl}}/api/posts/{{postId}}/likes"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{postId}}/likes",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{postId}}",
+                                "likes"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Toggle Pin (Admin Only)",
+                    "name": "게시글 고정 토글 (관리자 전용)",
                     "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const token = pm.collectionVariables.get(\"accessToken_admin\");",
+                                    "if (token) {",
+                                    "  pm.request.headers.upsert({ key: \"Authorization\", value: `Bearer ${token}` });",
+                                    "}"
+                                ]
+                            }
+                        },
                         {
                             "listen": "test",
                             "script": {
@@ -660,7 +849,17 @@
                                 "exec": [
                                     "pm.test(\"게시글 고정/해제 200\", function () {",
                                     "  pm.expect(pm.response.code).to.eql(200);",
-                                    "});"
+                                    "});",
+                                    "",
+                                    "try {",
+                                    "    const json = pm.response.json();",
+                                    "    const expectedMessages = [\"게시글 고정 성공\", \"게시글 고정 해제 성공\"];",
+                                    "    if (json.message) {",
+                                    "         pm.test(\"응답 메시지 확인\", function () {",
+                                    "            pm.expect(expectedMessages).to.include(json.message);",
+                                    "         });",
+                                    "    }",
+                                    "} catch(e) {}"
                                 ]
                             }
                         }
@@ -668,12 +867,23 @@
                     "request": {
                         "method": "POST",
                         "header": [],
-                        "url": "{{baseUrl}}/api/posts/{{postId}}/pin"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{postId}}/pin",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{postId}}",
+                                "pin"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Delete Post",
+                    "name": "게시글 삭제",
                     "event": [
                         {
                             "listen": "test",
@@ -690,17 +900,27 @@
                     "request": {
                         "method": "DELETE",
                         "header": [],
-                        "url": "{{baseUrl}}/api/posts/{{postId}}"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{postId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{postId}}"
+                            ]
+                        }
                     },
                     "response": []
                 }
             ]
         },
         {
-            "name": "04. Comments",
+            "name": "04. 댓글",
             "item": [
                 {
-                    "name": "Get Comments",
+                    "name": "댓글 목록 조회",
                     "event": [
                         {
                             "listen": "test",
@@ -717,12 +937,23 @@
                     "request": {
                         "method": "GET",
                         "header": [],
-                        "url": "{{baseUrl}}/api/posts/{{postId}}/comments"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{postId}}/comments",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{postId}}",
+                                "comments"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Create Comment",
+                    "name": "댓글 생성",
                     "event": [
                         {
                             "listen": "prerequest",
@@ -772,12 +1003,23 @@
                                 }
                             }
                         },
-                        "url": "{{baseUrl}}/api/posts/{{postId}}/comments"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{postId}}/comments",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{postId}}",
+                                "comments"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Update Comment",
+                    "name": "댓글 수정",
                     "event": [
                         {
                             "listen": "prerequest",
@@ -819,12 +1061,22 @@
                                 }
                             }
                         },
-                        "url": "{{baseUrl}}/api/comments/{{commentId}}"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/comments/{{commentId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "comments",
+                                "{{commentId}}"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Toggle Comment Like",
+                    "name": "댓글 좋아요 토글",
                     "event": [
                         {
                             "listen": "test",
@@ -833,7 +1085,17 @@
                                 "exec": [
                                     "pm.test(\"댓글 좋아요 토글 200\", function () {",
                                     "  pm.expect(pm.response.code).to.eql(200);",
-                                    "});"
+                                    "});",
+                                    "",
+                                    "try {",
+                                    "    const json = pm.response.json();",
+                                    "    const expectedMessages = [\"좋아요 설정 성공\", \"좋아요 취소 성공\"];",
+                                    "    if (json.message) {",
+                                    "         pm.test(\"응답 메시지 확인\", function () {",
+                                    "            pm.expect(expectedMessages).to.include(json.message);",
+                                    "         });",
+                                    "    }",
+                                    "} catch(e) {}"
                                 ]
                             }
                         }
@@ -841,12 +1103,23 @@
                     "request": {
                         "method": "POST",
                         "header": [],
-                        "url": "{{baseUrl}}/api/comments/{{commentId}}/likes"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/comments/{{commentId}}/likes",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "comments",
+                                "{{commentId}}",
+                                "likes"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Delete Comment",
+                    "name": "댓글 삭제",
                     "event": [
                         {
                             "listen": "test",
@@ -863,17 +1136,27 @@
                     "request": {
                         "method": "DELETE",
                         "header": [],
-                        "url": "{{baseUrl}}/api/comments/{{commentId}}"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/comments/{{commentId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "comments",
+                                "{{commentId}}"
+                            ]
+                        }
                     },
                     "response": []
                 }
             ]
         },
         {
-            "name": "05. Reports",
+            "name": "05. 신고",
             "item": [
                 {
-                    "name": "Create Report",
+                    "name": "신고 생성",
                     "event": [
                         {
                             "listen": "prerequest",
@@ -926,12 +1209,86 @@
                                 }
                             }
                         },
-                        "url": "{{baseUrl}}/api/reports"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/reports",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "reports"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Get Reports (Admin Only)",
+                    "name": "신고 목록 조회 (관리자 전용)",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const token = pm.collectionVariables.get(\"accessToken_admin\");",
+                                    "if (token) {",
+                                    "  pm.request.headers.upsert({ key: \"Authorization\", value: `Bearer ${token}` });",
+                                    "}"
+                                ]
+                            }
+                        },
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"조회 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/reports?page=0&size=10&sort=reportedAt,desc&status=PENDING&type=",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "reports"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "reportedAt,desc"
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "PENDING"
+                                },
+                                {
+                                    "key": "type",
+                                    "value": ""
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "내 신고 목록 조회",
                     "event": [
                         {
                             "listen": "test",
@@ -948,12 +1305,36 @@
                     "request": {
                         "method": "GET",
                         "header": [],
-                        "url": "{{baseUrl}}/api/reports?page=0&size=10&sort=reportedAt,desc&status=PENDING&type="
+                        "url": {
+                            "raw": "{{baseUrl}}/api/reports/me?page=0&size=10&sort=reportedAt,desc",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "reports",
+                                "me"
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "sort",
+                                    "value": "reportedAt,desc"
+                                }
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Get My Reports",
+                    "name": "신고 상세 조회 (신고자 또는 관리자/소유자)",
                     "event": [
                         {
                             "listen": "test",
@@ -970,34 +1351,22 @@
                     "request": {
                         "method": "GET",
                         "header": [],
-                        "url": "{{baseUrl}}/api/reports/me?page=0&size=10&sort=reportedAt,desc"
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Get Report Detail",
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "type": "text/javascript",
-                                "exec": [
-                                    "pm.test(\"조회 200\", function () {",
-                                    "  pm.expect(pm.response.code).to.eql(200);",
-                                    "});"
-                                ]
-                            }
+                        "url": {
+                            "raw": "{{baseUrl}}/api/reports/{{reportId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "reports",
+                                "{{reportId}}"
+                            ]
                         }
-                    ],
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": "{{baseUrl}}/api/reports/{{reportId}}"
                     },
                     "response": []
                 },
                 {
-                    "name": "Update Report",
+                    "name": "신고 수정",
                     "event": [
                         {
                             "listen": "prerequest",
@@ -1040,12 +1409,22 @@
                                 }
                             }
                         },
-                        "url": "{{baseUrl}}/api/reports/{{reportId}}"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/reports/{{reportId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "reports",
+                                "{{reportId}}"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Cancel Report",
+                    "name": "신고 취소",
                     "event": [
                         {
                             "listen": "test",
@@ -1062,12 +1441,22 @@
                     "request": {
                         "method": "DELETE",
                         "header": [],
-                        "url": "{{baseUrl}}/api/reports/{{reportId}}"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/reports/{{reportId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "reports",
+                                "{{reportId}}"
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Process Report (Admin Only)",
+                    "name": "신고 처리 (관리자 전용)",
                     "event": [
                         {
                             "listen": "prerequest",
@@ -1076,7 +1465,12 @@
                                 "exec": [
                                     "const ts = new Date().toISOString();",
                                     "pm.collectionVariables.set(\"reportAction\", pm.collectionVariables.get(\"reportAction\") || \"HIDE\");",
-                                    "pm.collectionVariables.set(\"reportProcessReason\", `Process Reason @ ${ts}`);"
+                                    "pm.collectionVariables.set(\"reportProcessReason\", `Process Reason @ ${ts}`);",
+                                    "",
+                                    "const token = pm.collectionVariables.get(\"accessToken_admin\");",
+                                    "if (token) {",
+                                    "  pm.request.headers.upsert({ key: \"Authorization\", value: `Bearer ${token}` });",
+                                    "}"
                                 ]
                             }
                         },
@@ -1110,17 +1504,28 @@
                                 }
                             }
                         },
-                        "url": "{{baseUrl}}/api/reports/{{reportId}}/process"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/reports/{{reportId}}/process",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "reports",
+                                "{{reportId}}",
+                                "process"
+                            ]
+                        }
                     },
                     "response": []
                 }
             ]
         },
         {
-            "name": "06. Stats",
+            "name": "06. 통계",
             "item": [
                 {
-                    "name": "Top Writers",
+                    "name": "우수 작성자 통계",
                     "event": [
                         {
                             "listen": "test",
@@ -1137,12 +1542,33 @@
                     "request": {
                         "method": "GET",
                         "header": [],
-                        "url": "{{baseUrl}}/api/stats/users/top-writers?limit=10&days=30"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/stats/users/top-writers?limit=10&days=30",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "stats",
+                                "users",
+                                "top-writers"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "days",
+                                    "value": "30"
+                                }
+                            ]
+                        }
                     },
                     "response": []
                 },
                 {
-                    "name": "Top Commenters",
+                    "name": "우수 답변자 통계",
                     "event": [
                         {
                             "listen": "test",
@@ -1159,17 +1585,38 @@
                     "request": {
                         "method": "GET",
                         "header": [],
-                        "url": "{{baseUrl}}/api/stats/users/top-commenters?limit=10&days=30"
+                        "url": {
+                            "raw": "{{baseUrl}}/api/stats/users/top-commenters?limit=10&days=30",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "stats",
+                                "users",
+                                "top-commenters"
+                            ],
+                            "query": [
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "days",
+                                    "value": "30"
+                                }
+                            ]
+                        }
                     },
                     "response": []
                 }
             ]
         },
         {
-            "name": "07. System",
+            "name": "07. 시스템",
             "item": [
                 {
-                    "name": "Health Check",
+                    "name": "헬스 체크",
                     "event": [
                         {
                             "listen": "test",
@@ -1189,7 +1636,15 @@
                         },
                         "method": "GET",
                         "header": [],
-                        "url": "{{baseUrl}}/health"
+                        "url": {
+                            "raw": "{{baseUrl}}/health",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        }
                     },
                     "response": []
                 }
@@ -1276,11 +1731,6 @@
         {
             "key": "baseUrl",
             "value": "http://localhost:8080",
-            "type": "string"
-        },
-        {
-            "key": "accessToken",
-            "value": "",
             "type": "string"
         },
         {
@@ -1422,6 +1872,18 @@
             "key": "accessToken_owner",
             "value": "",
             "type": "string"
+        },
+        {
+            "key": "lastStatus",
+            "value": ""
+        },
+        {
+            "key": "lastJson",
+            "value": ""
+        },
+        {
+            "key": "accessToken",
+            "value": ""
         }
     ]
 }
