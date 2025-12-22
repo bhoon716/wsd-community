@@ -30,9 +30,9 @@ public class UserController {
     @Operation(summary = "내 정보 조회", description = "현재 로그인한 사용자의 프로필을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "내 정보 조회 성공 예시", value = """
             {
-                "isSuccess": true,
+                "code": "SUCCESS",
                 "message": "내 정보 조회 성공",
-                "payload": {
+                "data": {
                     "userId": 1,
                     "name": "홍길동",
                     "email": "hong@test.com"
@@ -49,9 +49,9 @@ public class UserController {
     @Operation(summary = "회원 탈퇴", description = "회원 탈퇴를 처리합니다.")
     @ApiResponse(responseCode = "204", description = "탈퇴 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "회원 탈퇴 성공 예시", value = """
             {
-                "isSuccess": true,
+                "code": "SUCCESS",
                 "message": "회원 탈퇴 성공",
-                "payload": null
+                "data": null
             }
             """)))
     public ResponseEntity<CommonResponse<Void>> withdraw(@AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -63,9 +63,9 @@ public class UserController {
     @Operation(summary = "회원 역할 변경 (OWNER 전용)", description = "특정 회원의 역할을 변경합니다.")
     @ApiResponse(responseCode = "200", description = "역할 변경 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "역할 변경 성공 예시", value = """
             {
-                "isSuccess": true,
+                "code": "SUCCESS",
                 "message": "회원 역할 변경 성공",
-                "payload": null
+                "data": null
             }
             """)))
     public ResponseEntity<CommonResponse<Void>> changeRole(

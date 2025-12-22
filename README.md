@@ -1,193 +1,224 @@
-# WSD Community
+# WSD Community Project
 
-동아리(WSD) 운영을 위한 **커뮤니티 백엔드 API**입니다.  
-게시판/댓글/좋아요/게시판 유형, **인기글(Redis 캐싱)**, **JWT 인증/인가(RBAC: GUEST/MEMBER/ADMIN)**, 검색/정렬/페이지네이션, 통계/관리자 기능을 제공합니다.
-
----
-
-## 주요 기능
-- 인증/인가: JWT Access/Refresh, Role 기반 권한 제어(GUEST/MEMBER/ADMIN)
-- 소셜 로그인 2종: Google OAuth2 + Firebase Auth(ID Token 검증)
-- 게시판 유형(BoardType) 관리(관리자)
-- 게시글/댓글 CRUD + 검색/정렬/페이지네이션
-- 좋아요(중복 방지) + 카운트
-- 인기글(Trending) 조회 + Redis 캐싱(TTL)
-- 전역 Rate Limit(예: 비로그인/인증 API 보호)
-- 공통 에러 응답 포맷 + 입력 검증
-- Health 체크(`/health`)
-- Swagger(OpenAPI) 자동 문서
-- 자동화 테스트 20+ / 시드 200+ / MySQL(FK, Index) / Flyway 마이그레이션
+> **2025-2학기 Web System Design Term Project**  
+> 고성능, 고가용성을 지향하는 동아리 커뮤니티 백엔드 서비스
 
 ---
 
-## 기술 스택
-- Spring Boot, Spring MVC, Spring Security
-- JPA(Hibernate), MySQL, Flyway
-- Redis(캐시/레이트리밋/토큰 블랙리스트 등)
-- Swagger: springdoc-openapi
-- Docker / docker-compose
-- Test: JUnit5, Spring Boot Test, Spring Security Test
+## 1. 프로젝트 개요 (Project Overview)
+**WSD Community**는 대학 동아리 운영을 위한 올인원 커뮤니티 플랫폼의 백엔드 시스템입니다.  
+단순한 게시판 기능을 넘어, **강력한 보안(RBAC)**, **대용량 트래픽 대응 설계**를 목표로 개발되었습니다.
+
+### 주요 기능
+-   **게시판**: 일반/질문 게시글 작성, 조회(검색/정렬/페이징), 수정, 삭제.
+-   **댓글**: 게시글에 대한 댓글 작성 및 조회, 대댓글(선택적).
+-   **신고 시스템**: 부적절한 게시글/댓글 신고 및 관리자 처리 프로세스.
+-   **통계**: 활동량이 많은 우수 작성자/답변자 랭킹 집계.
+-   **인증/인가**: JWT 기반 자체 로그인 및 Firebase 소셜 로그인, RBAC(User/Admin/Owner) 권한 관리.
 
 ---
 
-## 배포 주소
-- Base URL: `http://<JCLOUD_HOST>:<PORT>`
-- Swagger: `http://<JCLOUD_HOST>:<PORT>/swagger-ui`
-- OpenAPI JSON: `http://<JCLOUD_HOST>:<PORT>/v3/api-docs`
-- Health: `http://<JCLOUD_HOST>:<PORT>/health`
+## 2. 실행 방법 (Get Started)
 
----
+### 사전 요구사항 (Prerequisites)
+-   Docker & Docker Compose
+-   JDK 21 (로컬 빌드/실행 시)
 
-## 실행 방법
+### 1) Docker Compose 실행 (권장)
+데이터베이스(MySQL, Redis)와 애플리케이션을 통합 실행합니다.
 
-### 1) Docker(권장)
 ```bash
-# (레포 루트)
+# 1. 환경변수 파일 생성
 cp .env.example .env
-docker compose up -d --build
-````
 
-### 2) 로컬 실행
+# 2. 실행
+docker compose up -d --build
+```
+-   **서버 접속**: `http://localhost:8080`
+-   **Swagger UI**: `http://localhost:8080/swagger-ui/index.html`
+
+### 2) 로컬 실행 (Gradle)
+DB만 Docker로 띄우고 애플리케이션은 로컬 환경에서 실행합니다.
 
 ```bash
-# DB/Redis가 떠 있어야 함(또는 docker로 db/redis만 띄우기)
-./gradlew clean test
-./gradlew bootRun
+# 1. DB 실행
+docker compose up -d db redis
+
+# 2. 의존성 설치 및 실행
+./gradlew clean bootRun
 ```
 
-> Flyway 마이그레이션은 애플리케이션 시작 시 자동 적용됩니다.
-> 시드 데이터는 프로젝트 구현에 따라 `seed` 스크립트/명령을 제공합니다. (예: `./gradlew seed` 또는 `java -jar ... --seed=true`)
-
----
-
-## 환경변수(.env)
-
-`.env`는 **Classroom 제출용**이며 Public Repo에는 올리지 않습니다.
-
----
-
-## 인증 플로우(요약)
-
-* 일반 로그인: `POST /auth/login` → Access/Refresh 발급
-* 갱신: `POST /auth/refresh` → Access 재발급(필요 시 Refresh 회전/블랙리스트)
-* Google OAuth2: `GET /auth/google`(로그인 시작) → 콜백 처리 → 우리 JWT 발급
-* Firebase: `POST /auth/firebase`(ID Token 전달) → 검증 → 우리 JWT 발급
-
----
-
-## 역할/권한
-
-* **GUEST**: 공개 조회(정책에 따라 제한), 로그인/회원가입
-* **MEMBER**: 게시글/댓글 작성, 좋아요, 내 정보 수정
-* **ADMIN**: 사용자/게시판유형/콘텐츠 관리, 통계 조회, 캐시 강제 갱신 등
-
-### 예시 계정
-
-* MEMBER: `user1@wsd.com / P@ssw0rd!`
-* ADMIN: `admin@wsd.com / P@ssw0rd!`
-
----
-
-## API 요약(대표)
-
-* Auth
-
-  * `POST /auth/register`
-  * `POST /auth/login`
-  * `POST /auth/refresh`
-  * `POST /auth/logout`
-  * `GET  /auth/google`
-  * `POST /auth/firebase`
-  * `GET  /auth/me`
-
-* Board Types (Admin 일부)
-
-  * `GET  /board-types`
-  * `POST /admin/board-types`
-  * `PATCH /admin/board-types/{id}`
-  * `DELETE /admin/board-types/{id}`
-
-* Posts / Comments / Likes
-
-  * `GET  /posts` (page/size/sort/keyword/typeId/dateFrom/dateTo)
-  * `POST /posts`
-  * `GET  /posts/{id}`
-  * `PATCH /posts/{id}`
-  * `DELETE /posts/{id}`
-  * `POST /posts/{id}/like`
-  * `DELETE /posts/{id}/like`
-  * `POST /posts/{id}/comments`
-  * `GET  /posts/{id}/comments`
-  * `PATCH /comments/{id}`
-  * `DELETE /comments/{id}`
-
-* Trending / Admin / Health
-
-  * `GET  /trending/posts` (Redis 캐시)
-  * `POST /admin/cache/trending/refresh`
-  * `GET  /admin/stats/daily`
-  * `GET  /health` (no-auth)
-
-> 전체 엔드포인트 및 요청/응답 예시는 Swagger에서 확인합니다.
-
----
-
-## Postman
-
-* 컬렉션: `postman/WSD-Community.postman_collection.json`
-* 환경변수 예시:
-
-  * `BASE_URL=http://<JCLOUD_HOST>:<PORT>`
-  * `ACCESS_TOKEN=...`
-* Pre-request/Test 스크립트 포함(토큰 저장/주입, 상태코드 검증 등)
-
----
-
-## 테스트
-
+### 3) 테스트 실행
 ```bash
 ./gradlew test
 ```
 
 ---
 
-## DB 연결 정보(테스트용)
-> 채점 및 로컬 테스트를 위한 DB 접속 정보입니다. (JCloud 내부 또는 포트포워딩 환경)
-* **Host**: `<JCLOUD_IP>` 또는 `localhost`
-* **Port**: `3306` (MySQL), `6379` (Redis)
-* **Database**: `wsd`
-* **Username**: `wsd_user`
-* **Password**: `********` (Classroom 제출 파일 참조)
+## 3. 환경변수 설명 (Environment Variables)
+`.env.example` 파일을 참고하여 `.env` 파일을 생성해야 합니다.
+
+| 변수명 | 설명 | 비고 |
+| --- | --- | --- |
+| `MYSQL_USER` | DB 사용자명 | |
+| `MYSQL_PASSWORD` | DB 비밀번호 | |
+| `MYSQL_ROOT_PASSWORD` | DB 루트 비밀번호 | Docker 컨테이너용 |
+| `JWT_SECRET` | JWT 서명 키 | **32자 이상 필수** |
+| `SPRING_DATA_REDIS_PASSWORD` | Redis 비밀번호 | |
+| `FIREBASE_CONFIG` | Firebase Admin SDK 설정 (JSON) | 소셜 로그인용 |
 
 ---
 
-## 기술 및 보안 고려사항
-### 1. 보안(Security)
-- **비밀번호 암호화**: BCrypt 해시 알고리즘 적용 (DB 평문 저장 방지)
-- **JWT 보안**:
-    - Access Token(15분) + Refresh Token(2주) 구조
-    - Refresh Token Rotation (RTR) 및 탈취 감지 로직 적용
-- **전역 Exception Handling**: 불필요한 스택트레이스 노출 방지 및 일관된 에러 응답
+## 4. 배포 주소 (Deployment)
+(JCloud 배포 환경 기준)
 
-### 2. 성능(Performance)
-- **Redis Caching**:
-    - 인기글(`Trending`) 조회: TTL 1시간 적용, DB 부하 최소화
-    - 반복적인 인증 조회 최소화
-- **DB 최적화**:
-    - 검색/정렬 필드(`created_at`, `type`, `title`)에 Index 적용
-    - N+1 문제 방지를 위한 `BatchSize` 및 `Fetch Join` 적용
+-   **Base URL**: `http://<SERVER_IP>:8080`
+-   **Swagger UI**: `http://<SERVER_IP>:8080/swagger-ui/index.html`
+-   **Health Check**: `http://<SERVER_IP>:8080/health`
 
 ---
 
-## 한계점 및 개선 계획
-- **CI/CD 파이프라인**: 현재 쉘 스크립트로 배포 중이나, 향후 GitHub Actions 도입 예정
-- **대용량 트래픽**: 현재 단일 인스턴스 구조 -> 향후 Docker Swarm/K8s 도입을 통한 Scale-out 고려
-- **검색 고도화**: `LIKE` 검색의 한계 -> ElasticSearch 도입 고려
+## 5. Postman 환경설정 (Postman Configuration)
+제출된 Postman Collection(`postman/wsd_community_collection.json`)을 사용하기 위한 환경 변수 설정입니다.
+`Environments` 또는 `Collection Variables`에 아래 변수를 설정해주세요.
 
+| 변수명 | 값 (예시) | 설명 |
+| --- | --- | --- |
+| `baseUrl` | `http://localhost:8080` | API 서버 주소 |
+| `firebase_api_key` | `AIzaSy...` | Firebase Web API Key (프로젝트 설정 > 일반 > 웹 API 키) |
+
+> **참고**: `accessToken` 및 `idToken` 등은 로그인 요청 시 **Pre-request/Tests 스크립트**에 의해 자동으로 설정됩니다. 별도로 입력할 필요가 없습니다.
 
 ---
 
-## 보안 주의
+## 6. 인증 플로우 설명 (Auth Flow)
+1.  **로그인**: 
+    -   소셜 로그인: `POST /api/auth/firebase` (Firebase ID Token)
+    -   OAuth2 로그인: `GET /oauth2/authorization/google` (Spring Security OAuth2)
+2.  **토큰 발급**: 
+    -   인증 성공 시 `Access Token` (유효기간 1시간) 및 `Refresh Token` (유효기간 7일) 발급.
+3.  **요청 인증**: 
+    -   보호된 API 요청 시 헤더에 `Authorization: Bearer <Access Token>` 포함.
+4.  **토큰 재발급**: 
+    -   Access Token 만료 시 `POST /api/auth/reissue` 요청. Refresh Token Rotation(RTR) 적용.
 
-* `.env`, 키 파일(.pem/.ppk), 비밀번호/시크릿/credentials는 **절대 public repo에 커밋 금지**
-* 민감정보는 Classroom에만 제출합니다.
+---
+
+## 7. 역할/권한표 (Roles & Permissions)
+
+| Role | 설명 | 접근 가능 범위 |
+| --- | --- | --- |
+| **USER** | 일반 사용자 | 게시글/댓글 작성, 본인 글 수정/삭제, 좋아요, 신고 |
+| **ADMIN** | 관리자 | 모든 글/댓글 관리(삭제/수정), 신고 목록 조회 및 처리, 게시글 고정 |
+| **OWNER** | 최고 관리자 | 관리자 권한 + 시스템 설정 및 오너 전용 기능 |
+
+---
+
+## 8. 예제 계정 (Example Accounts)
+초기 데이터(`V2__seed_data.sql`)에 포함된 테스트용 계정입니다.
+
+| Role | Email | Password |
+| --- | --- | --- |
+| **USER** | `user1@test.com` | `password1234` |
+| **ADMIN** | `admin@test.com` | `password1234` |
+| **OWNER** | `owner@test.com` | `password1234` |
+
+---
+
+## 9. DB 연결 정보 (Database)
+로컬 및 테스트 환경 접속 정보입니다.
+
+-   **Host**: `localhost` (Docker Network 내부: `mysql`)
+-   **Port**: `3306`
+-   **Database**: `community`
+-   **User**: `user` (환경변수 참조)
+-   **Password**: `password` (환경변수 참조)
+
+---
+
+## 10. 엔드포인트 요약표 (API Endpoints)
+
+| Method | URI | 설명 | 권한 |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/health` | 헬스 체크 | ALL |
+| `POST` | `/api/auth/firebase` | Firebase 로그인 | ALL |
+| `GET` | `/api/posts` | 게시글 목록 (검색/정렬) | ALL |
+| `POST` | `/api/posts` | 게시글 작성 | USER+ |
+| `GET` | `/api/posts/{id}` | 게시글 상세 조회 | ALL |
+| `DELETE` | `/api/posts/{id}` | 게시글 삭제 | 본인/ADMIN |
+| `POST` | `/api/reports` | 신고 생성 | USER+ |
+| `GET` | `/api/reports` | 신고 목록 조회 (필터링 가능) | ADMIN+ |
+| `POST` | `/api/reports/{id}/process` | 신고 처리 | ADMIN+ |
+| `GET` | `/api/stats/users/top-writers` | 우수 작성자 랭킹 | ALL |
+
+---
+
+## 11. 성능 및 보안 고려사항 (Performance & Security)
+1.  **Rate Limiting**: `Bucket4j`를 적용하여 IP 기반 요청 제한 (DDoS 방지).
+2.  **N+1 문제 해결**: `Fetch Join` 및 `default_batch_fetch_size` 설정을 통해 연관 관계 조회 성능 최적화.
+3.  **인덱싱 (Indexing)**: 검색 성능 향상을 위해 `users(email)`, `posts(created_at, title)` 등 주요 컬럼에 인덱스 적용.
+4.  **보안**:
+    -   모든 비밀번호는 `BCrypt`로 해싱 저장.
+    -   `Spring Security` + `JWT` 필터를 통한 철저한 인증/인가.
+    -   `CorsConfigurationSource`를 통한 명시적 CORS 정책 적용.
+
+---
+
+## 12. 한계와 개선 계획 (Limitations)
+-   **한계**: 단일 MySQL 인스턴스 사용으로 인한 쓰기 작업 병목 가능성 존재.
+-   **개선 계획**:
+    -   DB Replication (Master-Slave) 구조 도입으로 읽기 성능 분산.
+    -   Redis 캐싱 전략을 단순 조회(Lookup)에서 Write-Back 등으로 고도화.
+    -   CI/CD 파이프라인(Github Actions) 구축을 통한 배포 자동화.
+
+---
+
+## 13. 에러 코드 명세 (Error Codes)
+
+### 공통 응답 포맷 (JSON)
+API는 예외 발생 시 일관된 포맷의 JSON 응답을 반환합니다.
+
+```json
+{
+  "timestamp": "2025-12-21T18:00:00",
+  "path": "/api/posts/999",
+  "status": 404,
+  "code": "P001",
+  "message": "게시글을 찾을 수 없습니다.",
+  "details": null
+}
+```
+
+### 주요 에러 코드
+| HTTP | Code | 설명 |
+| --- | --- | --- |
+| **404** | `U001` | 사용자를 찾을 수 없습니다. |
+| **409** | `U002` | 이미 존재하는 이메일입니다. |
+| **401** | `U003` | 비밀번호가 일치하지 않습니다. |
+| **401** | `A001` | 인증되지 않은 사용자입니다. |
+| **403** | `A002` | 접근 권한이 없습니다. |
+| **401** | `A003` | 유효하지 않은 토큰입니다. |
+| **401** | `A004` | 만료된 토큰입니다. |
+| **404** | `A005` | 리프레시 토큰을 찾을 수 없습니다. |
+| **403** | `A006` | 관리자 권한이 필요합니다. |
+| **403** | `A007` | 오너 권한이 필요합니다. |
+| **404** | `P001` | 게시글을 찾을 수 없습니다. |
+| **403** | `P002` | 게시글 작성자가 아닙니다. |
+| **404** | `C001` | 댓글을 찾을 수 없습니다. |
+| **403** | `C002` | 댓글 작성자가 아닙니다. |
+| **404** | `R001` | 신고를 찾을 수 없습니다. |
+| **400** | `R002` | 본인의 게시글이나 댓글은 신고할 수 없습니다. |
+| **409** | `R003` | 이미 신고한 게시글/댓글입니다. |
+| **400** | `R004` | 이미 처리된 신고입니다. |
+| **500** | `R005` | 신고 핸들러 설정 오류입니다. |
+| **400** | `R006` | 유효하지 않은 신고 처리 작업입니다. |
+| **400** | `R007` | 지원하지 않는 신고 유형입니다. |
+| **500** | `G001` | 내부 서버 오류가 발생했습니다. |
+| **400** | `G002` | 잘못된 입력값입니다. |
+| **404** | `G003` | 요청한 리소스를 찾을 수 없습니다. |
+| **429** | `G004` | 요청 횟수가 초과되었습니다. |
+| **400** | `U004` | 오너 역할로 변경할 수 없습니다. |
+| **409** | `U005` | 마지막 관리자는 강등할 수 없습니다. |
+| **409** | `U006` | 마지막 오너는 강등할 수 없습니다. |
+| **400** | `U007` | 본인의 역할은 변경할 수 없습니다. |
+| **400** | `U008` | 오너의 역할은 변경할 수 없습니다. |

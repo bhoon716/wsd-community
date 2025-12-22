@@ -37,9 +37,9 @@ public class AuthController {
     @Operation(summary = "로그아웃", description = "로그아웃 처리합니다.")
     @ApiResponse(responseCode = "200", description = "로그아웃 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "로그아웃 성공 예시", value = """
             {
-                "isSuccess": true,
+                "code": "SUCCESS",
                 "message": "로그아웃 성공",
-                "payload": null
+                "data": null
             }
             """)))
     public ResponseEntity<CommonResponse<Void>> logout(
@@ -54,9 +54,9 @@ public class AuthController {
     @Operation(summary = "Firebase 로그인", description = "Firebase ID Token을 사용하여 로그인합니다.")
     @ApiResponse(responseCode = "200", description = "로그인 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "로그인 성공 예시", value = """
             {
-                "isSuccess": true,
+                "code": "SUCCESS",
                 "message": "로그인 성공",
-                "payload": {
+                "data": {
                     "userId": 1,
                     "email": "user@example.com",
                     "name": "홍길동"
@@ -78,9 +78,9 @@ public class AuthController {
     @Operation(summary = "토큰 재발급", description = "Refresh Token을 사용하여 Access Token을 재발급합니다.")
     @ApiResponse(responseCode = "200", description = "재발급 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "토큰 재발급 성공 예시", value = """
             {
-                "isSuccess": true,
+                "code": "SUCCESS",
                 "message": "토큰 재발급 성공",
-                "payload": {
+                "data": {
                      "userId": 1,
                     "email": "user@example.com",
                     "name": "홍길동"
