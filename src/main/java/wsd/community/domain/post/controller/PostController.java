@@ -191,8 +191,10 @@ public class PostController {
                 }
             }
             """)))
-    public ResponseEntity<CommonResponse<PostDetailResponse>> getPost(@PathVariable Long id) {
-        PostDetailResponse response = postService.getPost(id);
+    public ResponseEntity<CommonResponse<PostDetailResponse>> getPost(
+            @PathVariable Long id,
+            @RequestParam(required = false) String lang) {
+        PostDetailResponse response = postService.getPost(id, lang);
         return CommonResponse.ok(response, "게시글 상세 조회 성공");
     }
 

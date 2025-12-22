@@ -74,9 +74,16 @@ erDiagram
         BIGINT post_id FK
     }
 
+    CommentLikes {
+        BIGINT id PK
+        BIGINT user_id FK
+        BIGINT comment_id FK
+    }
+
     Users ||--o{ Posts : writes
     Users ||--o{ Comments : writes
     Users ||--o{ PostLikes : likes
+    Users ||--o{ CommentLikes : likes
     Users ||--o{ Reports : reports
     Users ||--o{ Reports : resolves
 
@@ -84,6 +91,7 @@ erDiagram
     Posts ||--o{ PostLikes : has
     Posts ||--o{ Reports : reported
 
+    Comments ||--o{ CommentLikes : has
     Comments ||--o{ Reports : reported
 ```
 
@@ -100,7 +108,7 @@ erDiagram
 | `email` | VARCHAR(255) | N | | 이메일 (로그인 ID) |
 | `password` | VARCHAR(255) | Y | | 비밀번호 (소셜 로그인 시 Null) |
 | `name` | VARCHAR(255) | N | | 사용자 이름 (닉네임) |
-| `role` | VARCHAR(50) | N | | 권한 (`MEMBER`, `ADMIN`, `OWNER`) |
+| `role` | VARCHAR(50) | N | | 권한 (`USER`, `ADMIN`, `OWNER`) |
 | `provider` | VARCHAR(50) | Y | | 소셜 제공자 (`GOOGLE` 등) |
 | `provider_id` | VARCHAR(255) | Y | | 소셜 제공자 식별값 |
 
@@ -153,6 +161,15 @@ erDiagram
 | `id` | BIGINT | N | PK, Auto Inc | 고유 ID |
 | `user_id` | BIGINT | N | FK | 사용자 ID |
 | `post_id` | BIGINT | N | FK | 게시글 ID |
+
+### 3-6. CommentLikes (댓글 좋아요)
+댓글 좋아요 이력을 저장합니다. (중복 좋아요 방지)
+
+| 컬럼명 | 타입 | Nullable | Default | 설명 |
+| --- | --- | --- | --- | --- |
+| `id` | BIGINT | N | PK, Auto Inc | 고유 ID |
+| `user_id` | BIGINT | N | FK | 사용자 ID |
+| `comment_id` | BIGINT | N | FK | 댓글 ID |
 
 ---
 

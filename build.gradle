@@ -62,6 +62,7 @@ dependencies {
 	implementation('com.google.firebase:firebase-admin:9.2.0') {
 		exclude group: 'commons-logging', module: 'commons-logging'
 	}
+	implementation 'com.google.cloud:google-cloud-translate:2.35.0'
 
 	// Bucket4j
 	implementation 'com.bucket4j:bucket4j-core:8.10.1'

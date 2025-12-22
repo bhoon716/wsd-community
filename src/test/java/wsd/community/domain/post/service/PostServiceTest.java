@@ -229,7 +229,7 @@ class PostServiceTest {
             given(postRepository.findById(postId)).willReturn(Optional.of(post));
 
             // when
-            PostDetailResponse response = postService.getPost(postId);
+            PostDetailResponse response = postService.getPost(postId, null);
 
             // then
             assertThat(response.id()).isEqualTo(postId);
@@ -245,7 +245,7 @@ class PostServiceTest {
             given(postRepository.findById(postId)).willReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> postService.getPost(postId))
+            assertThatThrownBy(() -> postService.getPost(postId, null))
                     .isInstanceOf(CustomException.class)
                     .hasFieldOrPropertyWithValue("errorCode", ErrorCode.POST_NOT_FOUND);
         }

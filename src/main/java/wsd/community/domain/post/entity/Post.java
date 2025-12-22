@@ -94,4 +94,9 @@ public class Post extends BaseEntity {
     public void togglePin() {
         this.isPinned = !this.isPinned;
     }
+
+    public void translate(String title, String content) {
+        this.title = title;
+        this.content = content;
+    }
 }

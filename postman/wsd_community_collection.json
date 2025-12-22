@@ -1,8 +1,8 @@
 {
     "info": {
         "_postman_id": "6eb1097b-0728-4fce-bdec-4f8c7d142dd3",
-        "name": "WSD Community API",
-        "description": "WSD Community API Postman Collection",
+        "name": "WSD 게시판 API",
+        "description": "WSD 게시판 API Postman Collection\nCollection Variables 중 firebase_api_key를 실제 api_key로 교체해야 합니다. (classroom 첨부 파일)\nGithub에 시크릿 업로드 방지를 위해 따로 분리했습니다.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
         "_exporter_id": "42838076"
     },
@@ -394,6 +394,26 @@
                         }
                     },
                     "response": []
+                },
+                {
+                    "name": "Google OAuth2 로그인 (브라우저 리다이렉트)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/oauth2/authorization/google",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "oauth2",
+                                "authorization",
+                                "google"
+                            ]
+                        },
+                        "description": "이 요청은 Google 로그인 페이지로 리다이렉트(302)됩니다. \nPostman은 브라우저가 아니므로 리다이렉트를 따라가도 로그인 화면(HTML)만 응답받습니다.\n\n실제 로그인을 테스트하려면:\n1. 브라우저에서 `http://{baseUrl}/oauth2/authorization/google` 접속\n2. Google 로그인 후 리다이렉트 된 URL에서 accessToken 확인"
+                    },
+                    "response": []
                 }
             ]
         },
@@ -609,6 +629,44 @@
                                 "api",
                                 "posts",
                                 "{{postId}}"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "게시글 상세 조회 (영어 번역)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "pm.test(\"조회 200\", function () {",
+                                    "  pm.expect(pm.response.code).to.eql(200);",
+                                    "});"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/posts/{{postId}}?lang=en",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "posts",
+                                "{{postId}}"
+                            ],
+                            "query": [
+                                {
+                                    "key": "lang",
+                                    "value": "en"
+                                }
                             ]
                         }
                     },
@@ -1730,7 +1788,7 @@
     "variable": [
         {
             "key": "baseUrl",
-            "value": "http://localhost:8080",
+            "value": "http://localhost:80",
             "type": "string"
         },
         {

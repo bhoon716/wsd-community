@@ -6,8 +6,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import wsd.community.common.error.CustomException;
 import wsd.community.common.error.ErrorCode;
+import wsd.community.common.firebase.TranslationService;
 import wsd.community.domain.post.entity.Post;
 import wsd.community.domain.post.entity.PostLike;
 import wsd.community.domain.post.repository.PostLikeRepository;
@@ -34,11 +37,18 @@ public class PostService {
     private final PostLikeRepository postLikeRepository;
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
+    private final TranslationService translationService;
 
-    public PostDetailResponse getPost(Long postId) {
-        log.info("게시글 조회 요청: postId={}", postId);
+    public PostDetailResponse getPost(Long postId, String lang) {
+        log.info("게시글 조회 요청: postId={}, lang={}", postId, lang);
         Post post = findPostById(postId);
         List<CommentResponse> comments = commentRepository.findAllByPostId(postId);
+
+        if (StringUtils.hasText(lang)) {
+            String translatedTitle = translationService.translate(post.getTitle(), lang);
+            String translatedContent = translationService.translate(post.getContent(), lang);
+            post.translate(translatedTitle, translatedContent);
+        }
 
         return PostDetailResponse.from(post, comments);
     }
