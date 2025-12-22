@@ -1,30 +1,32 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      args:
+        SERVER_PORT: ${APP_PORT_CONTAINER}
     image: ${APP_IMAGE_NAME}
-    container_name: ${CONTAINER_NAME_APP}
+    container_name: ${APP_CONTAINER_NAME}
     restart: unless-stopped
     ports:
-      - "${APP_PORT_HOST}:${SERVER_PORT}"
+      - "${APP_PORT_HOST}:${APP_PORT_CONTAINER}"
     environment:
-      SERVER_PORT: ${SERVER_PORT}
-      TZ: ${TZ}
-      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/wsd_community?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SERVER_PORT: ${APP_PORT_CONTAINER}
+      DB_URL: ${DB_URL}
+      DB_DRIVER_CLASS_NAME: ${DB_DRIVER_CLASS_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
-      SPRING_DATA_REDIS_HOST: redis
-      SPRING_DATA_REDIS_PORT: ${SPRING_DATA_REDIS_PORT}
-      SPRING_DATA_REDIS_PASSWORD: ${SPRING_DATA_REDIS_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT_CONTAINER: ${REDIS_PORT_CONTAINER}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
-      JWT_ACCESS_EXPIRATION_MS: ${JWT_ACCESS_EXPIRATION_MS}
-      JWT_REFRESH_EXPIRATION_MS: ${JWT_REFRESH_EXPIRATION_MS}
+      JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      APP_OAUTH2_REDIRECT_URI_SUCCESS: ${APP_OAUTH2_REDIRECT_URI_SUCCESS}
-      APP_OAUTH2_REDIRECT_URI_FAILURE: ${APP_OAUTH2_REDIRECT_URI_FAILURE}
-      FIREBASE_CONFIG: ${FIREBASE_CONFIG}
+      OAUTH2_REDIRECT_URI_SUCCESS: ${OAUTH2_REDIRECT_URI_SUCCESS}
+      OAUTH2_REDIRECT_URI_FAILURE: ${OAUTH2_REDIRECT_URI_FAILURE}
+      FIREBASE_SERVICE_ACCOUNT: ${FIREBASE_SERVICE_ACCOUNT}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
     depends_on:
       db:
@@ -32,42 +34,44 @@ services:
       redis:
         condition: service_started
     networks:
-      - bookstore-network
+      - app_network
 
   db:
-    image: mysql:${MYSQL_IMAGE_TAG}
-    container_name: ${CONTAINER_NAME_DB}
+    image: ${DB_IMAGE}
+    container_name: ${DB_CONTAINER_NAME}
     restart: unless-stopped
     ports:
-      - "${DB_PORT_HOST}"
+      - "${DB_PORT_HOST}:${DB_PORT_CONTAINER}"
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
       TZ: ${TZ}
     volumes:
       - db_data:/var/lib/mysql
+    networks:
+      - app_network
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - bookstore-network
 
   redis:
-    image: redis:${REDIS_IMAGE_TAG}
-    container_name: ${CONTAINER_NAME_REDIS}
+    image: ${REDIS_IMAGE}
+    container_name: ${REDIS_CONTAINER_NAME}
     restart: unless-stopped
-    command: redis-server --requirepass ${SPRING_DATA_REDIS_PASSWORD}
+    environment:
+      TZ: ${TZ}
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     ports:
-      - "${REDIS_PORT_HOST}"
+      - "${REDIS_PORT_HOST}:${REDIS_PORT_CONTAINER}"
     networks:
-      - bookstore-network
+      - app_network
 
 networks:
-  bookstore-network:
+  app_network:
     driver: bridge
 
 volumes:
