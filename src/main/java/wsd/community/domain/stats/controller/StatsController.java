@@ -29,9 +29,9 @@ public class StatsController {
     @Operation(summary = "가장 글을 많이 쓴 작성자 조회", description = "지정된 기간 동안 가장 글을 많이 쓴 작성자 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "가장 글을 많이 쓴 작성자 조회 성공 예시", value = """
             {
-                "isSuccess": true,
+                "code": "SUCCESS",
                 "message": "가장 글을 많이 쓴 작성자 목록 조회를 성공했습니다.",
-                "payload": [
+                "data": [
                     {
                         "rank": 1,
                         "userId": 10,
@@ -59,9 +59,9 @@ public class StatsController {
     @Operation(summary = "가장 댓글을 많이 쓴 작성자 조회", description = "지정된 기간 동안 가장 댓글을 많이 쓴 작성자 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "가장 댓글을 많이 쓴 작성자 조회 성공 예시", value = """
             {
-                "isSuccess": true,
+                "code": "SUCCESS",
                 "message": "가장 댓글을 많이 쓴 작성자 목록 조회를 성공했습니다.",
-                "payload": [
+                "data": [
                     {
                         "rank": 1,
                         "userId": 15,

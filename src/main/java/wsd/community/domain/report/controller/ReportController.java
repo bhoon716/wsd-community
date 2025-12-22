@@ -49,9 +49,9 @@ public class ReportController {
     @Operation(summary = "신고 상세 조회", description = "신고 상세 정보를 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "신고 상세 조회 성공 예시", value = """
             {
-                "isSuccess": true,
+                "code": "SUCCESS",
                 "message": "신고 상세 조회 성공",
-                "payload": {
+                "data": {
                     "id": 1,
                     "reporterId": 10,
                     "reporterEmail": "reporter@example.com",
@@ -76,9 +76,9 @@ public class ReportController {
     @Operation(summary = "내 신고 목록 조회", description = "내가 신고한 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "내 신고 목록 조회 성공 예시", value = """
             {
-                "isSuccess": true,
+                "code": "SUCCESS",
                 "message": "내 신고 목록 조회 성공",
-                "payload": {
+                "data": {
                     "content": [
                         {
                             "id": 1,
@@ -111,9 +111,9 @@ public class ReportController {
     @Operation(summary = "신고 생성", description = "새로운 신고를 생성합니다.")
     @ApiResponse(responseCode = "201", description = "생성 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "신고 생성 성공 예시", value = """
             {
-                "isSuccess": true,
+                "code": "SUCCESS",
                 "message": "신고 생성 성공",
-                "payload": {
+                "data": {
                     "id": 1,
                     "reporterId": 10,
                     "reporterEmail": "reporter@example.com",
@@ -139,9 +139,9 @@ public class ReportController {
     @Operation(summary = "신고 수정", description = "신고 내용을 수정합니다.")
     @ApiResponse(responseCode = "200", description = "수정 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "신고 수정 성공 예시", value = """
             {
-                "isSuccess": true,
+                "code": "SUCCESS",
                 "message": "신고 수정 성공",
-                "payload": {
+                "data": {
                     "id": 1,
                     "reporterId": 10,
                     "reporterEmail": "reporter@example.com",
@@ -167,9 +167,9 @@ public class ReportController {
     @Operation(summary = "신고 취소", description = "신고를 취소합니다.")
     @ApiResponse(responseCode = "204", description = "취소 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "신고 취소 성공 예시", value = """
             {
-                "isSuccess": true,
+                "code": "SUCCESS",
                 "message": "신고 취소 성공",
-                "payload": null
+                "data": null
             }
             """)))
     public ResponseEntity<CommonResponse<Void>> cancelReport(
@@ -184,9 +184,9 @@ public class ReportController {
     @Operation(summary = "전체 신고 목록 조회 (관리자 전용)", description = "전체 신고 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "전체 신고 목록 조회 성공 예시", value = """
             {
-                "isSuccess": true,
+                "code": "SUCCESS",
                 "message": "신고 목록 조회 성공",
-                "payload": {
+                "data": {
                     "content": [
                         {
                             "id": 1,
@@ -221,9 +221,9 @@ public class ReportController {
     @Operation(summary = "신고 처리 (관리자 전용)", description = "신고를 처리합니다.")
     @ApiResponse(responseCode = "200", description = "처리 성공", content = @Content(mediaType = "application/json", examples = @ExampleObject(name = "신고 처리 성공 예시", value = """
             {
-                "isSuccess": true,
+                "code": "SUCCESS",
                 "message": "신고 처리 성공",
-                "payload": {
+                "data": {
                     "id": 1,
                     "reporterId": 10,
                     "reporterEmail": "reporter@example.com",
