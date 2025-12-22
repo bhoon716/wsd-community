@@ -63,6 +63,16 @@ jobs:
           NETWORK_NAME=community-network-ci
           TZ=Asia/Seoul
 
+          PROMETHEUS_CONTAINER_NAME=community-prometheus-ci
+          PROMETHEUS_PORT_HOST=9090
+          PROMETHEUS_PORT_CONTAINER=9090
+
+          GRAFANA_CONTAINER_NAME=community-grafana-ci
+          GRAFANA_PORT_HOST=3000
+          GRAFANA_PORT_CONTAINER=3000
+          GRAFANA_ADMIN_USER=admin
+          GRAFANA_ADMIN_PASSWORD=password
+
           JWT_SECRET=dummy
           JWT_ACCESS_EXPIRATION=3600000
           JWT_REFRESH_EXPIRATION=604800000
