@@ -46,10 +46,10 @@ public class Comment extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
+    @Column(name = "like_count", nullable = false)
     private Long likeCount;
 
-    @Column(nullable = false)
+    @Column(name = "is_hidden", nullable = false)
     private boolean isHidden;
 
     @Builder

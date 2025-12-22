@@ -43,7 +43,7 @@ public class User extends BaseEntity {
     @Column(nullable = true)
     private String provider;
 
-    @Column(nullable = true)
+    @Column(name = "provider_id", nullable = true)
     private String providerId;
 
     @Column(nullable = false)

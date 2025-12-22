@@ -53,13 +53,13 @@ public class Post extends BaseEntity {
     @Column(nullable = false)
     private PostType type;
 
-    @Column(nullable = false)
+    @Column(name = "like_count", nullable = false)
     private Long likeCount;
 
-    @Column(nullable = false)
+    @Column(name = "is_hidden", nullable = false)
     private boolean isHidden;
 
-    @Column(nullable = false)
+    @Column(name = "is_pinned", nullable = false)
     private boolean isPinned;
 
     @Builder

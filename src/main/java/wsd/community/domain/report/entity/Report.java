@@ -72,21 +72,23 @@ public class Report extends BaseEntity {
     @Column(nullable = false)
     private ReportAction action;
 
-    @Column(length = 500)
+    @Column(name = "resolved_reason", length = 500)
     private String resolvedReason;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "resolved_by")
     private User resolvedBy;
 
+    @Column(name = "resolved_at")
     private java.time.LocalDateTime resolvedAt;
 
+    @Column(name = "canceled_at")
     private java.time.LocalDateTime canceledAt;
 
-    @Column(length = 300)
+    @Column(name = "target_title", length = 300)
     private String targetTitle;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "target_content", columnDefinition = "TEXT")
     private String targetContent;
 
     @Builder
