@@ -156,6 +156,7 @@ API 응답은 **성공(Success)**과 **실패(Error)**에 따라 다른 규격�
 | `POST` | `/api/auth/firebase` | Firebase ID Token 로그인 |
 | `POST` | `/api/auth/reissue` | Access Token 재발급 |
 | `POST` | `/api/auth/logout` | 로그아웃 |
+| `GET` | `/oauth2/authorization/google` | Google OAuth2 로그인 (Redirection) |
 
 ### 8-2. User (사용자)
 | Method | URI | 설명 |

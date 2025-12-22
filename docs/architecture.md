@@ -56,28 +56,37 @@ src/main/java/wsd/community
 
 ---
 
-## 4. 배포 구조 (Deployment Structure)
-Docker Compose를 기반으로 애플리케이션과 데이터베이스 인프라를 통합 관리합니다.
+## 4. 배포 아키텍처 (Deployment Architecture)
+CI/CD 파이프라인을 통해 자동화된 배포 프로세스를 구축했습니다.
 
 ### 4-1. 시스템 구성도
 ```mermaid
 graph LR
-    Client[Client] -->|port:8080| App[Application Container\n(Spring Boot)]
+    User[User] -->|HTTP| Server[Deployment Server]
     
-    subgraph "Docker Network (wsd-network)"
-        App -->|port:3306| MySQL[(MySQL 8.0)]
-        App -->|port:6379| Redis[(Redis 7.0)]
+    subgraph "Server (Docker Compose)"
+        App[App Container]
+        DB[(MySQL)]
+        Redis[(Redis)]
+        
+        App --> DB
+        App --> Redis
+    end
+    
+    subgraph "CI/CD Pipeline"
+        Github[GitHub Actions] -->|Build & Push| GHCR[GitHub Container Registry]
+        GHCR -->|Pull Image| Server
     end
 ```
 
 ### 4-2. 컨테이너 구성
-| 컨테이너명 | 이미지 | 포트 | 역할 |
+| 서비스명 | 이미지 소스 | 포트 | 역할 |
 | --- | --- | --- | --- |
-| **community-app** | `openjdk:21-jdk-slim` | `8080:8080` | Spring Boot 애플리케이션 실행 |
-| **community-mysql** | `mysql:8.0` | `3306:3306` | 영구 데이터 저장 (Volume 마운트) |
-| **community-redis** | `redis:alpine` | `6379:6379` | Token 저장, Rate Limiting 캐시 |
+| **App** | `ghcr.io/.../community-app` | `80:8080` | Spring Boot 앱 (운영 환경) |
+| **DB** | `mysql:8.0` | `3306:3306` | 메인 데이터베이스 |
+| **Redis** | `redis:alpine` | `6379:6379` | 캐시 및 세션 저장소 |
 
-### 4-3. 배포 프로세스
-1.  **Build**: `./gradlew clean build -x test` (JAR 파일 생성)
-2.  **Containerize**: `Dockerfile`을 이용해 이미지 빌드/실행.
-3.  **Run**: `docker compose up -d --build` 명령어로 전체 서비스 구동.
+### 4-3. CI/CD 프로세스
+1.  **CI (GitHub Actions)**: 코드 Push 시 자동 빌드 및 테스트 수행.
+2.  **Registry**: 빌드 성공 시 Docker Image가 GHCR에 자동 업로드.
+3.  **CD**: 운영 서버에서 최신 이미지를 받아 무중단 배포(Rolling Update) 수행.

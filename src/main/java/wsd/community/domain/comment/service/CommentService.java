@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wsd.community.common.error.ErrorCode;
+
 import wsd.community.common.error.CustomException;
 import wsd.community.domain.comment.entity.Comment;
 import wsd.community.domain.comment.entity.CommentLike;
@@ -34,6 +35,7 @@ public class CommentService {
     public Long createComment(Long userId, Long postId, CommentCreateRequest request) {
         log.info("댓글 생성 요청: userId={}, postId={}", userId, postId);
         User user = findUserById(userId);
+
         Post post = findPostById(postId);
 
         Comment comment = Comment.builder()
@@ -51,6 +53,7 @@ public class CommentService {
     public Long updateComment(Long userId, Long commentId, CommentUpdateRequest request) {
         log.info("댓글 수정 요청: userId={}, commentId={}", userId, commentId);
         Comment comment = findCommentById(commentId);
+
         validateWriter(comment, userId);
 
         comment.update(request.content());

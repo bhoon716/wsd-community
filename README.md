@@ -13,6 +13,7 @@
 -   **게시판**: 일반/질문 게시글 작성, 조회(검색/정렬/페이징), 수정, 삭제.
 -   **댓글**: 게시글에 대한 댓글 작성 및 조회, 대댓글(선택적).
 -   **신고 시스템**: 부적절한 게시글/댓글 신고 및 관리자 처리 프로세스.
+-   **게시글 번역**: Google Cloud Translation API를 이용한 AI 자동 번역 (다국어 지원).
 -   **통계**: 활동량이 많은 우수 작성자/답변자 랭킹 집계.
 -   **인증/인가**: JWT 기반 자체 로그인 및 Firebase 소셜 로그인, RBAC(User/Admin/Owner) 권한 관리.
 
@@ -173,7 +174,25 @@ docker compose up -d db redis
 
 ---
 
-## 13. 에러 코드 명세 (Error Codes)
+## 13. CI/CD 파이프라인 (Automated Deployment)
+GitHub Actions를 통해 빌드, 테스트, 배포 과정을 자동화했습니다. (`.github/workflows/ci-cd.yml`)
+
+### Pipeline Stages
+1.  **CI (Build & Test)**:
+    -   `main` 브랜치 Push/PR 시 트리거.
+    -   JDK 21 환경에서 `./gradlew build` 수행 (Unit Test & Checkstyle 포함).
+    -   Docker Compose를 이용해 테스트용 DB(MySQL, Redis) 자동 프로비저닝.
+2.  **Container Build & Push**:
+    -   빌드 성공 시 Docker Image 생성 (`ghcr.io/repo/community-app`).
+    -   GitHub Container Registry (GHCR)에 이미지 업로드.
+3.  **CD (Deployment)**:
+    -   `SSH`를 통해 운영 서버에 접속.
+    -   최신 Docker Image를 Pull 하고 `docker compose up -d`로 무중단 배포(Rolling Update 효과).
+    -   **Health Check**: 배포 후 `/health` 또는 `/actuator/health` 엔드포인트를 호출하여 정상 구동 확인 (최대 2분 대기).
+
+---
+
+## 14. 에러 코드 명세 (Error Codes)
 
 ### 공통 응답 포맷 (JSON)
 API는 예외 발생 시 일관된 포맷의 JSON 응답을 반환합니다.
@@ -222,3 +241,26 @@ API는 예외 발생 시 일관된 포맷의 JSON 응답을 반환합니다.
 | **409** | `U006` | 마지막 오너는 강등할 수 없습니다. |
 | **400** | `U007` | 본인의 역할은 변경할 수 없습니다. |
 | **400** | `U008` | 오너의 역할은 변경할 수 없습니다. |
+
+---
+
+## 15. Firebase ML (AI Translation)
+Google Cloud Translation API를 활용하여 게시글 제목과 본문을 원하는 언어로 자동 번역합니다. (Firebase ML & AI)
+
+### 동작 원리
+1.  사용자가 게시글 상세 조회 시 `lang` 파라미터 전달 (예: `/api/posts/1?lang=en`).
+2.  서버에서 **Google Cloud Translation API** (`translate`) 호출.
+3.  게시글의 제목과 본문을 해당 언어(`en`)로 번역.
+4.  번역된 텍스트를 응답에 포함하여 반환. (번역 API 실패 시 원문 반환 - Fail-open)
+
+### 사용 예시
+-   **요청**: `GET /api/posts/1?lang=en`
+-   **응답**:
+    ```json
+    {
+        "id": 1,
+        "title": "Hello World",
+        "content": "This is a translated post.",
+        ...
+    }
+    ```
