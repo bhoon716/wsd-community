@@ -6,261 +6,219 @@
 ---
 
 ## 1. 프로젝트 개요 (Project Overview)
-**WSD Community**는 대학 동아리 운영을 위한 올인원 커뮤니티 플랫폼의 백엔드 시스템입니다.  
-단순한 게시판 기능을 넘어, **강력한 보안(RBAC)**, **대용량 트래픽 대응 설계**를 목표로 개발되었습니다.
+**WSD Community**는 대학 동아리 운영을 위한 커뮤니티 플랫폼의 백엔드 시스템입니다.  
 
-### 주요 기능
+### 필수 구현 기능 (Essential Features)
 -   **게시판**: 일반/질문 게시글 작성, 조회(검색/정렬/페이징), 수정, 삭제.
 -   **댓글**: 게시글에 대한 댓글 작성 및 조회, 대댓글(선택적).
 -   **신고 시스템**: 부적절한 게시글/댓글 신고 및 관리자 처리 프로세스.
--   **게시글 번역**: Google Cloud Translation API를 이용한 AI 자동 번역 (다국어 지원).
 -   **통계**: 활동량이 많은 우수 작성자/답변자 랭킹 집계.
 -   **인증/인가**: JWT 기반 자체 로그인 및 Firebase 소셜 로그인, RBAC(User/Admin/Owner) 권한 관리.
 
+### 추가 구현 기능 (Additional Features - Bonus)
+-   **게시글 번역**: Google Cloud Translation API를 이용한 AI 자동 번역.
+-   **시스템 모니터링**: Prometheus + Grafana를 통한 서버 상태 시각화.
+-   **CI/CD**: GitHub Actions를 통한 자동 빌드 및 배포 파이프라인 구축.
+
+### 사용 기술 (Tech Stack)
+| 구분 | 기술 / 버전 | 비고 |
+| :--- | :--- | :--- |
+| **Language** | Java 21 | LTS Version |
+| **Framework** | Spring Boot 3.5.8 | |
+| **Database** | MySQL 8.0 | Main DB |
+| **Cache** | Redis (Alpine) | Session, Rate Limiting |
+| **Security** | Spring Security, JWT | Authentication / Authorization |
+| **Infra** | Docker, Docker Compose | Containerization |
+| **CI/CD** | GitHub Actions | Automated Build & Deploy |
+| **Monitoring** | Prometheus, Grafana | System Metrics Visualization |
+| **External** | Firebase Auth/ML, Google OAuth2 | Social Login, AI Translation |
+
+### 프로젝트 구조 (Directory Structure)
+```text
+wsd-community-backend/
+├── .github/workflows/    # CI/CD Pipeline
+├── docs/                 # Documentation
+├── prometheus/           # Monitoring Config
+├── src/main/java/        # Source Code
+├── src/main/resources/   # App Config
+├── docker-compose.yml    # Container Orchestration
+└── README.md             # Project Guide
+```
+
+### 상세 문서 (Documentation)
+-   [**시스템 아키텍처**](docs/architecture.md)
+-   [**API 상세 설계**](docs/api-design.md)
+-   [**DB 스키마 설계**](docs/db-schema.md)
+
 ---
 
-## 2. 실행 방법 (Get Started)
+## 2. 실행 및 접속 가이드 (Getting Started)
 
-### 사전 요구사항 (Prerequisites)
--   Docker & Docker Compose
--   JDK 21 (로컬 빌드/실행 시)
-
-### 1) Docker Compose 실행 (권장)
-데이터베이스(MySQL, Redis)와 애플리케이션을 통합 실행합니다.
+### 1) 로컬 실행 (Docker Compose)
+데이터베이스와 애플리케이션을 통합 실행하는 권장 방법입니다.
 
 ```bash
-# 1. 환경변수 파일 생성
+# 1. 환경변수 설정
 cp .env.example .env
 
 # 2. 실행
 docker compose up -d --build
 ```
--   **서버 접속**: `http://localhost:8080`
--   **Swagger UI**: `http://localhost:8080/swagger-ui/index.html`
+-   **서버 접속**: `http://localhost:80`
+-   **Swagger UI**: `http://localhost:80/swagger-ui/index.html`
 
-### 2) 로컬 실행 (Gradle)
-DB만 Docker로 띄우고 애플리케이션은 로컬 환경에서 실행합니다.
+### 2) JCloud 배포 환경 접속
+실제 운영 중인 서버 정보입니다.
 
-```bash
-# 1. DB 실행
-docker compose up -d db redis
+-   **API Server**: `http://113.198.66.75:18127`
+-   **Swagger UI**: `http://113.198.66.75:18127/swagger-ui/index.html`
+-   **Grafana**: `http://113.198.66.75:10127` (계정: `.env` 참조)
 
-# 2. 의존성 설치 및 실행
-./gradlew clean bootRun
-```
+> **원격 DB/Redis 접속 (SSH)**
+> ```bash
+> # 1. SSH 접속 (Port: 19127)
+> ssh -p 19127 <USERNAME>@113.198.66.75
+> 
+> # 2. MySQL 접속
+> docker exec -it wsd_community_db mysql -u user -p
+> 
+> # 3. Redis 접속
+> docker exec -it wsd_community_redis redis-cli -a redis_password
+> ```
 
-### 3) 테스트 실행
-```bash
-./gradlew test
-```
+### 3) 로그인 가이드 (Login Methods)
+본 프로젝트는 **Google OAuth2**와 **Firebase Auth** 두 가지 방식을 지원합니다.
 
----
+#### A. Google OAuth2 (백엔드 통합)
+Spring Security OAuth2 Client를 이용한 방식입니다.
+-   **접속 URL**: `http://localhost:80/oauth2/authorization/google`
+-   **동작**: 접속 시 구글 로그인 창으로 리다이렉트되며, 로그인 성공 시 백엔드에서 자체 JWT(Access/Refresh)를 쿠키/헤더로 발급합니다.
 
-## 3. 환경변수 설명 (Environment Variables)
-`.env.example` 파일을 참고하여 `.env` 파일을 생성해야 합니다.
+#### B. Firebase Auth (클라이언트 연동)
+프론트엔드에서 Firebase SDK로 로그인 후, 발급받은 `ID Token`을 서버로 전송하는 방식입니다.
+-   **테스트 파일**: `docs/firebase-login-test.html`
+-   **사용법**:
+    1.  위 파일을 브라우저로 엽니다.
+    2.  본인의 Firebase Config(ApiKey 등)를 입력하고 '초기화'를 누릅니다.
+    3.  '구글 로그인' 또는 '이메일 로그인'을 진행합니다.
+    4.  로그인 성공 시 '백엔드로 토큰 전송' 버튼을 눌러 실제 서버 로그인을 검증합니다.
 
-| 변수명 | 설명 | 비고 |
-| --- | --- | --- |
-| `MYSQL_USER` | DB 사용자명 | |
-| `MYSQL_PASSWORD` | DB 비밀번호 | |
-| `MYSQL_ROOT_PASSWORD` | DB 루트 비밀번호 | Docker 컨테이너용 |
-| `JWT_SECRET` | JWT 서명 키 | **32자 이상 필수** |
-| `SPRING_DATA_REDIS_PASSWORD` | Redis 비밀번호 | |
-| `FIREBASE_CONFIG` | Firebase Admin SDK 설정 (JSON) | 소셜 로그인용 |
-
----
-
-## 4. 배포 주소 (Deployment)
-(JCloud 배포 환경 기준)
-
--   **Base URL**: `http://<SERVER_IP>:8080`
--   **Swagger UI**: `http://<SERVER_IP>:8080/swagger-ui/index.html`
--   **Health Check**: `http://<SERVER_IP>:8080/health`
-
----
-
-## 5. Postman 환경설정 (Postman Configuration)
-제출된 Postman Collection(`postman/wsd_community_collection.json`)을 사용하기 위한 환경 변수 설정입니다.
-`Environments` 또는 `Collection Variables`에 아래 변수를 설정해주세요.
-
-| 변수명 | 값 (예시) | 설명 |
-| --- | --- | --- |
-| `baseUrl` | `http://localhost:8080` | API 서버 주소 |
-| `firebase_api_key` | `AIzaSy...` | Firebase Web API Key (프로젝트 설정 > 일반 > 웹 API 키) |
-
-> **참고**: `accessToken` 및 `idToken` 등은 로그인 요청 시 **Pre-request/Tests 스크립트**에 의해 자동으로 설정됩니다. 별도로 입력할 필요가 없습니다.
+### 3) 예제 계정 (Test Accounts)
+| Role | Email | Password | 주요 권한 |
+| --- | --- | --- | --- |
+| **USER** | `user1@test.com` | `password1234` | 게시글 작성, 댓글, 신고 |
+| **ADMIN** | `admin@test.com` | `password1234` | 게시글 관리, 댓글 관리, 신고 처리 |
+| **OWNER** | `owner@test.com` | `password1234` | 모든 권한 |
 
 ---
 
-## 6. 인증 플로우 설명 (Auth Flow)
-1.  **로그인**: 
-    -   소셜 로그인: `POST /api/auth/firebase` (Firebase ID Token)
-    -   OAuth2 로그인: `GET /oauth2/authorization/google` (Spring Security OAuth2)
-2.  **토큰 발급**: 
-    -   인증 성공 시 `Access Token` (유효기간 1시간) 및 `Refresh Token` (유효기간 7일) 발급.
-3.  **요청 인증**: 
-    -   보호된 API 요청 시 헤더에 `Authorization: Bearer <Access Token>` 포함.
-4.  **토큰 재발급**: 
-    -   Access Token 만료 시 `POST /api/auth/reissue` 요청. Refresh Token Rotation(RTR) 적용.
+## 3. 환경설정 (Configuration)
+
+### 주요 환경변수 (.env)
+`.env.example`을 참고하여 설정합니다.
+| 변수명 | 설명 |
+| :--- | :--- |
+| `DB_USER` | DB 사용자명 |
+| `DB_PASSWORD` | DB 비밀번호 |
+| `DB_ROOT_PASSWORD` | DB 루트 비밀번호 |
+| `JWT_SECRET` | JWT 서명 키 (32자 이상) |
+| `FIREBASE_SERVICE_ACCOUNT` | Firebase Admin SDK 설정 (JSON) |
+| `GRAFANA_ADMIN_USER` | Grafana 초기 ID |
+| `GRAFANA_ADMIN_PASSWORD` | Grafana 초기 PW |
+
+### Postman 설정
+`postman/wsd_community_collection.json`을 Import하여 사용하세요.
+-   **baseUrl**: `http://113.198.66.75:18127` (JCloud) 또는 `http://localhost:80` (Local)
+-   **firebase_api_key**: Firebase Web API Key (별도 설정 필요. 클래스룸 별도 제출)
 
 ---
 
-## 7. 역할/권한표 (Roles & Permissions)
+## 4. 시스템 설계 및 정책 (Design & Policies)
 
-| Role | 설명 | 접근 가능 범위 |
-| --- | --- | --- |
-| **USER** | 일반 사용자 | 게시글/댓글 작성, 본인 글 수정/삭제, 좋아요, 신고 |
-| **ADMIN** | 관리자 | 모든 글/댓글 관리(삭제/수정), 신고 목록 조회 및 처리, 게시글 고정 |
-| **OWNER** | 최고 관리자 | 관리자 권한 + 시스템 설정 및 오너 전용 기능 |
+### 인증 및 권한 (Auth & Roles)
+-   **로그인**: Firebase(소셜) 또는 자체 로그인 -> JWT(Access/Refresh) 발급.
+-   **Role**:
+    -   `USER`: 일반 사용자 (글작성, 신고)
+    -   `ADMIN`: 관리자 (글관리, 신고처리)
+    -   `OWNER`: 최고 관리자 (시스템 설정)
 
----
+### 성능 및 보안
+-   **Rate Limiting**: IP당 요청 횟수 제한 (Bucket4j).
+-   **Security**: 모든 비밀번호 BCrypt 해싱, CORS 정책 적용.
+-   **Optimization**: Fetch Join(N+1 방지), 주요 컬럼 Indexing.
 
-## 8. 예제 계정 (Example Accounts)
-초기 데이터(`V2__seed_data.sql`)에 포함된 테스트용 계정입니다.
-
-| Role | Email | Password |
-| --- | --- | --- |
-| **USER** | `user1@test.com` | `password1234` |
-| **ADMIN** | `admin@test.com` | `password1234` |
-| **OWNER** | `owner@test.com` | `password1234` |
-
----
-
-## 9. DB 연결 정보 (Database)
-로컬 및 테스트 환경 접속 정보입니다.
-
--   **Host**: `localhost` (Docker Network 내부: `mysql`)
--   **Port**: `3306`
--   **Database**: `community`
--   **User**: `user` (환경변수 참조)
--   **Password**: `password` (환경변수 참조)
+### 에러 처리 (Error Codes)
+일관된 JSON 응답 포맷을 사용하며, 주요 에러 코드는 다음과 같습니다.
+-   `U00x`: 사용자 관련 (없음, 중복 등)
+-   `A00x`: 인증/권한 관련 (토큰 만료, 접근 거부)
+-   `P00x`: 게시글 관련
+-   `R00x`: 신고 시스템 관련
 
 ---
 
-## 10. 엔드포인트 요약표 (API Endpoints)
+## 5. 과제 필수 구현 항목 (Requirements Implementation)
 
-| Method | URI | 설명 | 권한 |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/health` | 헬스 체크 | ALL |
-| `POST` | `/api/auth/firebase` | Firebase 로그인 | ALL |
-| `GET` | `/api/posts` | 게시글 목록 (검색/정렬) | ALL |
-| `POST` | `/api/posts` | 게시글 작성 | USER+ |
-| `GET` | `/api/posts/{id}` | 게시글 상세 조회 | ALL |
-| `DELETE` | `/api/posts/{id}` | 게시글 삭제 | 본인/ADMIN |
-| `POST` | `/api/reports` | 신고 생성 | USER+ |
-| `GET` | `/api/reports` | 신고 목록 조회 (필터링 가능) | ADMIN+ |
-| `POST` | `/api/reports/{id}/process` | 신고 처리 | ADMIN+ |
-| `GET` | `/api/stats/users/top-writers` | 우수 작성자 랭킹 | ALL |
+### 5.1 인증 및 인가 (Authentication & Authorization)
+- **JWT 기반 인증**: Access Token(1h) + Refresh Token(7d, Redis) 전략을 사용하여 보안과 편의성을 확보했습니다.
+- **소셜 로그인 (2종)**: Firebase Auth와 Google OAuth2 두 가지 방식을 모두 구현했습니다.
+- **RBAC**: `USER`, `ADMIN`, `OWNER` 3단계 권한 체계를 구축하고, Custom Annotation으로 엄격하게 권한을 제어합니다.
+
+### 5.2 데이터베이스 및 성능 (Database & Performance)
+- **MySQL & JPA**: JPA와 QueryDSL을 활용하여 N+1 문제를 방지하고, 복잡한 동적 쿼리와 페이징을 효율적으로 처리했습니다.
+- **Redis 활용**: Refresh Token 저장소 및 Bucket4j 기반 Rate Limiting(API 요청 제한)에 사용됩니다.
+- **마이그레이션**: Flyway를 통해 DB 스키마(`V1`)와 시드 데이터(`V2`)를 버전 관리합니다.
+
+### 5.3 API 및 예외 처리 (API & Error Handling)
+- **RESTful API**: 총 30개 이상의 엔드포인트를 구현했으며, 검색/정렬/필터링(Pagination)을 지원합니다. (상세: [API 문서](docs/api-design.md))
+- **입력 검증**: `@Valid`와 DTO를 통해 요청 데이터의 타입과 범위를 검증하며, 유효성 실패 시 상세 사유를 반환합니다.
+- **에러 응답 통일**: `GlobalExceptionHandler`를 통해 모든 예외를 일관된 JSON 포맷(`code`, `message`, `details`)으로 반환합니다.
+- **Http Status**: 성공(2xx), 클라이언트 오류(4xx), 서버 오류(5xx) 등 상황에 맞는 상태 코드를 적절히 사용합니다.
+
+### 5.4 로깅 및 테스트 (Logging & Testing)
+- **로깅 시스템**: AOP를 적용하여 API 요청/응답 요약 정보(Method, Path, Status, Latency)와 에러 스택 트레이스를 기록합니다.
+- **Health Check**: `/health` 엔드포인트를 통해 서버의 가용성을 확인합니다.
+- **테스트 코드**: JUnit5와 Mockito를 활용하여 컨트롤러 및 서비스 레이어에 대해 60개 이상의 테스트를 작성했습니다.
+- **API 문서화**: Swagger 및 Postman Collection을 통해 API 명세와 테스트 환경을 제공합니다.
+
+### 5.5 인프라 및 배포 (Infrastructure)
+- **Docker**: Multi-stage build를 적용한 최적화된 `Dockerfile`과 서비스 통합 관리를 위한 `docker-compose.yml`을 작성했습니다.
+- **JCloud 배포**: 실제 운영 환경에 배포되어 있으며, 헬스 체크(`GET /health`)를 통해 가용성을 보장합니다.
+
+### 5.6 문서화 (Documentation)
+- **Swagger/OpenAPI**: API 명세서를 자동화하여 `/swagger-ui/index.html`에서 제공합니다.
+- **Postman**: 환경 변수와 테스트 스크립트가 포함된 컬렉션을 제공하여 API 테스트 편의성을 높였습니다.
 
 ---
 
-## 11. 성능 및 보안 고려사항 (Performance & Security)
-1.  **Rate Limiting**: `Bucket4j`를 적용하여 IP 기반 요청 제한 (DDoS 방지).
-2.  **N+1 문제 해결**: `Fetch Join` 및 `default_batch_fetch_size` 설정을 통해 연관 관계 조회 성능 최적화.
-3.  **인덱싱 (Indexing)**: 검색 성능 향상을 위해 `users(email)`, `posts(created_at, title)` 등 주요 컬럼에 인덱스 적용.
-4.  **보안**:
-    -   모든 비밀번호는 `BCrypt`로 해싱 저장.
-    -   `Spring Security` + `JWT` 필터를 통한 철저한 인증/인가.
-    -   `CorsConfigurationSource`를 통한 명시적 CORS 정책 적용.
+## 6. 추가 구현 기능 (Additional Features)
+
+### 6.1 시스템 모니터링 (System Monitoring)
+Prometheus와 Grafana를 활용하여 서버의 주요 지표를 실시간으로 수집하고 시각화합니다.
+-   **대시보드 접속**: `http://113.198.66.75:10127` (계정: `.env` 참조)
+-   **수집 데이터**:
+    -   **System**: CPU 사용률, 메모리 점유율, Uptime
+    -   **Application**: HTTP 요청 수, 평균 응답 속도(Latency), 에러 발생률(Error Rate)
+    -   **JVM**: Heap/Non-Heap 메모리 상태, Garbage Collection 로그
+
+### 6.2 CI/CD 파이프라인 (Automated Deployment)
+GitHub Actions를 통해 코드 변경부터 배포까지의 과정을 자동화했습니다. (`.github/workflows/ci-cd.yml`)
+1.  **Build & Test**: `main` 브랜치 Push 시 JDK 21 환경에서 빌드 및 테스트 수행.
+2.  **Container Build**: 빌드 성공 시 Docker Image 생성 및 GHCR(GitHub Container Registry) 업로드.
+3.  **Deploy**: SSH를 통해 운영 서버에 접속하여 최신 이미지를 Pull 하고 컨테이너를 무중단 재시작 (Rolling Update).
+
+### 6.3 Firebase ML
+Firebase ML을 연동하여 다국어 지원 기능을 구현했습니다.
+-   **사용법**: 게시글 상세 조회 시 `lang` 파라미터(예: `en`, `ja`, `zh`)를 추가하여 요청.
+-   **동작**:
+    1.  클라이언트 요청 (`GET /api/posts/1?lang=en`)
+    2.  서버에서 `Google Translation API` 호출하여 제목/본문 번역
+    3.  번역된 콘텐츠를 응답 본문에 포함하여 반환 (원문 유지)
 
 ---
 
-## 12. 한계와 개선 계획 (Limitations)
--   **한계**: 단일 MySQL 인스턴스 사용으로 인한 쓰기 작업 병목 가능성 존재.
+## 7. 한계와 개선 계획 (Limitations)
+-   **한계**: 단일 DB 인스턴스로 인한 쓰기 부하 병목 가능성.
 -   **개선 계획**:
-    -   DB Replication (Master-Slave) 구조 도입으로 읽기 성능 분산.
-    -   Redis 캐싱 전략을 단순 조회(Lookup)에서 Write-Back 등으로 고도화.
-    -   CI/CD 파이프라인(Github Actions) 구축을 통한 배포 자동화.
-
----
-
-## 13. CI/CD 파이프라인 (Automated Deployment)
-GitHub Actions를 통해 빌드, 테스트, 배포 과정을 자동화했습니다. (`.github/workflows/ci-cd.yml`)
-
-### Pipeline Stages
-1.  **CI (Build & Test)**:
-    -   `main` 브랜치 Push/PR 시 트리거.
-    -   JDK 21 환경에서 `./gradlew build` 수행 (Unit Test & Checkstyle 포함).
-    -   Docker Compose를 이용해 테스트용 DB(MySQL, Redis) 자동 프로비저닝.
-2.  **Container Build & Push**:
-    -   빌드 성공 시 Docker Image 생성 (`ghcr.io/repo/community-app`).
-    -   GitHub Container Registry (GHCR)에 이미지 업로드.
-3.  **CD (Deployment)**:
-    -   `SSH`를 통해 운영 서버에 접속.
-    -   최신 Docker Image를 Pull 하고 `docker compose up -d`로 무중단 배포(Rolling Update 효과).
-    -   **Health Check**: 배포 후 `/health` 또는 `/actuator/health` 엔드포인트를 호출하여 정상 구동 확인 (최대 2분 대기).
-
----
-
-## 14. 에러 코드 명세 (Error Codes)
-
-### 공통 응답 포맷 (JSON)
-API는 예외 발생 시 일관된 포맷의 JSON 응답을 반환합니다.
-
-```json
-{
-  "timestamp": "2025-12-21T18:00:00",
-  "path": "/api/posts/999",
-  "status": 404,
-  "code": "P001",
-  "message": "게시글을 찾을 수 없습니다.",
-  "details": null
-}
-```
-
-### 주요 에러 코드
-| HTTP | Code | 설명 |
-| --- | --- | --- |
-| **404** | `U001` | 사용자를 찾을 수 없습니다. |
-| **409** | `U002` | 이미 존재하는 이메일입니다. |
-| **401** | `U003` | 비밀번호가 일치하지 않습니다. |
-| **401** | `A001` | 인증되지 않은 사용자입니다. |
-| **403** | `A002` | 접근 권한이 없습니다. |
-| **401** | `A003` | 유효하지 않은 토큰입니다. |
-| **401** | `A004` | 만료된 토큰입니다. |
-| **404** | `A005` | 리프레시 토큰을 찾을 수 없습니다. |
-| **403** | `A006` | 관리자 권한이 필요합니다. |
-| **403** | `A007` | 오너 권한이 필요합니다. |
-| **404** | `P001` | 게시글을 찾을 수 없습니다. |
-| **403** | `P002` | 게시글 작성자가 아닙니다. |
-| **404** | `C001` | 댓글을 찾을 수 없습니다. |
-| **403** | `C002` | 댓글 작성자가 아닙니다. |
-| **404** | `R001` | 신고를 찾을 수 없습니다. |
-| **400** | `R002` | 본인의 게시글이나 댓글은 신고할 수 없습니다. |
-| **409** | `R003` | 이미 신고한 게시글/댓글입니다. |
-| **400** | `R004` | 이미 처리된 신고입니다. |
-| **500** | `R005` | 신고 핸들러 설정 오류입니다. |
-| **400** | `R006` | 유효하지 않은 신고 처리 작업입니다. |
-| **400** | `R007` | 지원하지 않는 신고 유형입니다. |
-| **500** | `G001` | 내부 서버 오류가 발생했습니다. |
-| **400** | `G002` | 잘못된 입력값입니다. |
-| **404** | `G003` | 요청한 리소스를 찾을 수 없습니다. |
-| **429** | `G004` | 요청 횟수가 초과되었습니다. |
-| **400** | `U004` | 오너 역할로 변경할 수 없습니다. |
-| **409** | `U005` | 마지막 관리자는 강등할 수 없습니다. |
-| **409** | `U006` | 마지막 오너는 강등할 수 없습니다. |
-| **400** | `U007` | 본인의 역할은 변경할 수 없습니다. |
-| **400** | `U008` | 오너의 역할은 변경할 수 없습니다. |
-
----
-
-## 15. Firebase ML (AI Translation)
-Google Cloud Translation API를 활용하여 게시글 제목과 본문을 원하는 언어로 자동 번역합니다. (Firebase ML & AI)
-
-### 동작 원리
-1.  사용자가 게시글 상세 조회 시 `lang` 파라미터 전달 (예: `/api/posts/1?lang=en`).
-2.  서버에서 **Google Cloud Translation API** (`translate`) 호출.
-3.  게시글의 제목과 본문을 해당 언어(`en`)로 번역.
-4.  번역된 텍스트를 응답에 포함하여 반환. (번역 API 실패 시 원문 반환 - Fail-open)
-
-### 사용 예시
--   **요청**: `GET /api/posts/1?lang=en`
--   **응답**:
-    ```json
-    {
-        "id": 1,
-        "title": "Hello World",
-        "content": "This is a translated post.",
-        ...
-    }
-    ```
+    -   프론트엔드 구현.
+    -   DB Replication (Master-Slave) 도입.
+    -   Redis Write-Back 캐싱 전략 적용.
