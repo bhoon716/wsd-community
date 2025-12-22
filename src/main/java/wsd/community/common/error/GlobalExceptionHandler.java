@@ -3,9 +3,11 @@ package wsd.community.common.error;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -20,97 +22,103 @@ import wsd.community.common.response.ErrorResponse;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final int MAX_VALIDATION_ERRORS_TO_LOG = 10;
+
     @ExceptionHandler(CustomException.class)
-    public ResponseEntity<ErrorResponse> handleCustomException(
-            HttpServletRequest request, CustomException e) {
-
-        ErrorCode error = e.getErrorCode();
+    public ResponseEntity<ErrorResponse> handleCustomException(HttpServletRequest req, CustomException e) {
+        ErrorCode code = e.getErrorCode();
         Map<String, Object> details = detailOrNull(e.getDetail());
-
-        log.error("[ERROR] code={}, message={}, path={}, detail={}",
-                error.getCode(), error.getMessage(), request.getRequestURI(), e.getDetail());
-
-        return buildResponse(error, request.getRequestURI(), details);
+        return respond(req, code, details, e);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(
-            HttpServletRequest request, MethodArgumentNotValidException e) {
+    public ResponseEntity<ErrorResponse> handleValidation(HttpServletRequest req, MethodArgumentNotValidException e) {
+        Map<String, Object> details = new LinkedHashMap<>();
+        e.getBindingResult().getFieldErrors().stream()
+                .limit(MAX_VALIDATION_ERRORS_TO_LOG)
+                .forEach(err -> details.put(err.getField(), err.getDefaultMessage()));
 
-        Map<String, Object> details = new HashMap<>();
-        e.getBindingResult().getFieldErrors()
-                .forEach(error -> details.put(error.getField(), error.getDefaultMessage()));
+        int total = e.getBindingResult().getFieldErrorCount();
+        log.warn("[{}] {} {} validationErrors={} logged={}",
+                ErrorCode.INVALID_INPUT.getCode(),
+                req.getMethod(), req.getRequestURI(),
+                total, details.size());
 
-        log.warn("[WARN] 유효성 검증 실패: path={}, details={}", request.getRequestURI(), details);
-
-        return buildResponse(ErrorCode.INVALID_INPUT, request.getRequestURI(), details);
+        return buildResponse(ErrorCode.INVALID_INPUT, req.getRequestURI(), details);
     }
 
-    @ExceptionHandler(ExpiredJwtException.class)
-    public ResponseEntity<ErrorResponse> handleExpiredJwtException(
-            HttpServletRequest request, ExpiredJwtException e) {
-
-        log.warn("[WARN] 만료된 JWT: path={}, message={}", request.getRequestURI(), e.getMessage());
-
-        Map<String, Object> details = detailOrNull("만료된 토큰입니다.");
-        return buildResponse(ErrorCode.INVALID_TOKEN, request.getRequestURI(), details);
-    }
-
-    @ExceptionHandler(JwtException.class)
-    public ResponseEntity<ErrorResponse> handleJwtException(
-            HttpServletRequest request, JwtException e) {
-
-        log.warn("[WARN] 유효하지 않은 JWT: path={}, message={}", request.getRequestURI(), e.getMessage());
-
-        Map<String, Object> details = detailOrNull("유효하지 않은 토큰입니다.");
-        return buildResponse(ErrorCode.INVALID_TOKEN, request.getRequestURI(), details);
+    @ExceptionHandler({ ExpiredJwtException.class, JwtException.class })
+    public ResponseEntity<ErrorResponse> handleJwt(HttpServletRequest req, JwtException e) {
+        String msg = (e instanceof ExpiredJwtException) ? "만료된 토큰입니다." : "유효하지 않은 토큰입니다.";
+        return respond(req, ErrorCode.INVALID_TOKEN, detailOrNull(msg), e);
     }
 
     @ExceptionHandler({ AuthorizationDeniedException.class, AccessDeniedException.class })
-    public ResponseEntity<ErrorResponse> handleAccessDenied(
-            HttpServletRequest request, RuntimeException e) {
-
-        log.warn("[WARN] 접근 거부됨: path={}, message={}", request.getRequestURI(), e.getMessage());
-
-        return buildResponse(ErrorCode.FORBIDDEN, request.getRequestURI(), null);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(
-            HttpServletRequest request, Exception e) {
-
-        log.error("[ERROR] 예기치 못한 오류: path={}, exception={}",
-                request.getRequestURI(), e.getClass().getSimpleName());
-
-        Map<String, Object> details = detailOrNull(e.getMessage());
-        return buildResponse(ErrorCode.INTERNAL_ERROR, request.getRequestURI(), details);
-    }
-
-    private ResponseEntity<ErrorResponse> buildResponse(
-            ErrorCode error, String path, Map<String, Object> details) {
-        return ResponseEntity
-                .status(error.getStatus())
-                .body(ErrorResponse.of(error, path, details));
+    public ResponseEntity<ErrorResponse> handleForbidden(HttpServletRequest req, RuntimeException e) {
+        return respond(req, ErrorCode.FORBIDDEN, null, e);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNoResourceFoundException(
-            HttpServletRequest request, NoResourceFoundException e) {
-        log.warn("[WARN] 리소스를 찾을 수 없음: path={}", request.getRequestURI());
-        return buildResponse(ErrorCode.NOT_FOUND, request.getRequestURI(), null);
+    public ResponseEntity<ErrorResponse> handleNotFound(HttpServletRequest req, NoResourceFoundException e) {
+        return respond(req, ErrorCode.NOT_FOUND, null, e);
     }
 
-    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(
-            HttpServletRequest request, org.springframework.dao.DataIntegrityViolationException e) {
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleIntegrity(HttpServletRequest req, DataIntegrityViolationException e) {
+        Throwable root = mostSpecificCause(e);
+        Map<String, Object> details = detailOrNull("데이터 처리 중 충돌이 발생했습니다. (중복 데이터 등)");
+        if (details != null) {
+            details = new LinkedHashMap<>(details);
+            details.put("cause", root.getClass().getSimpleName());
+        }
 
-        log.warn("[WARN] 데이터 무결성 위반: path={}, message={}", request.getRequestURI(), e.getMessage());
-
-        return buildResponse(ErrorCode.INVALID_INPUT, request.getRequestURI(),
-                detailOrNull("데이터처리 중 충돌이 발생했습니다. (중복 데이터 등)"));
+        return respond(req, ErrorCode.INVALID_INPUT, details, e);
     }
 
-    private Map<String, Object> detailOrNull(String detailMessage) {
-        return detailMessage == null ? null : Map.of("detail", detailMessage);
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleAny(HttpServletRequest req, Exception e) {
+        Map<String, Object> details = detailOrNull("서버 오류가 발생했습니다.");
+        return respond(req, ErrorCode.INTERNAL_ERROR, details, e);
+    }
+
+    private ResponseEntity<ErrorResponse> respond(HttpServletRequest req, ErrorCode code, Map<String, Object> details,
+            Exception e) {
+        logCompact(req, code, e, details);
+        return buildResponse(code, req.getRequestURI(), details);
+    }
+
+    private ResponseEntity<ErrorResponse> buildResponse(ErrorCode error, String path, Map<String, Object> details) {
+        return ResponseEntity.status(error.getStatus())
+                .body(ErrorResponse.of(error, path, details));
+    }
+
+    private void logCompact(HttpServletRequest req, ErrorCode code, Exception e, Map<String, Object> details) {
+        HttpStatus status = code.getStatus();
+        String ex = e.getClass().getSimpleName();
+
+        if (status.is4xxClientError()) {
+            log.warn("[{}] {} {} ex={}",
+                    code.getCode(), req.getMethod(), req.getRequestURI(), ex);
+            return;
+        }
+
+        if (log.isDebugEnabled()) {
+            log.error("[{}] {} {} ex={}",
+                    code.getCode(), req.getMethod(), req.getRequestURI(), ex, e);
+        } else {
+            log.error("[{}] {} {} ex={}",
+                    code.getCode(), req.getMethod(), req.getRequestURI(), ex);
+        }
+    }
+
+    private Map<String, Object> detailOrNull(String msg) {
+        return (msg == null || msg.isBlank()) ? null : Map.of("detail", msg);
+    }
+
+    private Throwable mostSpecificCause(Throwable t) {
+        Throwable cur = t;
+        while (cur.getCause() != null && cur.getCause() != cur)
+            cur = cur.getCause();
+        return cur;
     }
 }
