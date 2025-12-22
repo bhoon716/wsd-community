@@ -1,0 +1,220 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Lowercase the repo name
+        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
+      - name: Create .env for CI
+        run: |
+          cat <<EOF > .env
+          SERVER_PORT=8080
+
+          APP_IMAGE_NAME=ghcr.io/${REPO}:latest
+          APP_CONTAINER_NAME=community-app-ci
+          APP_PORT_HOST=8080
+          APP_PORT_CONTAINER=8080
+
+          DB_IMAGE=mysql:8.0
+          DB_CONTAINER_NAME=community-db-ci
+          DB_PORT_HOST=3306
+          DB_PORT_CONTAINER=3306
+          DB_DATABASE=wsd_community
+          DB_ROOT_PASSWORD=password
+          DB_USER=user
+          DB_PASSWORD=password
+          DB_URL=jdbc:mysql://community-db-ci:3306/wsd_community?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false
+          DB_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+          SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop
+
+          REDIS_IMAGE=redis:alpine
+          REDIS_CONTAINER_NAME=community-redis-ci
+          REDIS_PORT_HOST=6379
+          REDIS_PORT_CONTAINER=6379
+          REDIS_PASSWORD=password
+          REDIS_HOST=community-redis-ci
+
+          NETWORK_NAME=community-network-ci
+          TZ=Asia/Seoul
+
+          JWT_SECRET=dummy
+          JWT_ACCESS_EXPIRATION=3600000
+          JWT_REFRESH_EXPIRATION=604800000
+          GOOGLE_CLIENT_ID=dummy
+          GOOGLE_CLIENT_SECRET=dummy
+          OAUTH2_REDIRECT_URI_SUCCESS=dummy
+          OAUTH2_REDIRECT_URI_FAILURE=dummy
+          FIREBASE_SERVICE_ACCOUNT=dummy
+          CORS_ALLOWED_ORIGINS=dummy
+          EOF
+
+      - name: Start Dependencies (DB, Redis)
+        run: docker compose up -d db redis
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle (Test & Lint)
+        run: ./gradlew build
+        env:
+          DB_URL: jdbc:mysql://127.0.0.1:3306/wsd_community?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&useSSL=false
+          DB_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+          DB_USER: user
+          DB_PASSWORD: password
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT_CONTAINER: 6379
+          REDIS_PASSWORD: password
+          TZ: Asia/Seoul
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build App Image with Compose
+        run: docker compose build app
+
+      - name: Push App Image with Compose
+        run: docker compose push app
+
+      - name: Stop Services
+        if: always()
+        run: docker compose down
+
+  deploy:
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_ACTOR: ${{ github.actor }}
+          GH_REPO: ${{ github.repository }}
+          ENV_VARS: ${{ secrets.ENV_VARS }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          envs: GH_TOKEN,GH_ACTOR,GH_REPO,ENV_VARS
+          script: |
+            set -Eeuo pipefail
+
+            compose() {
+              if command -v docker-compose >/dev/null 2>&1; then
+                docker-compose "$@"
+              else
+                docker compose "$@"
+              fi
+            }
+
+            HOME_DIR="${HOME:-/home/$(whoami)}"
+            DEPLOY_DIR="${HOME_DIR}/community-deploy"
+
+            echo "HOME_DIR=${HOME_DIR}"
+            echo "DEPLOY_DIR=${DEPLOY_DIR}"
+
+            mkdir -p "${DEPLOY_DIR}"
+            cd "${DEPLOY_DIR}"
+            pwd
+
+            echo "${GH_TOKEN}" | docker login ghcr.io -u "${GH_ACTOR}" --password-stdin
+
+            if [ ! -d ".git" ]; then
+              git clone "https://github.com/${GH_REPO}.git" .
+            else
+              git fetch --all --prune
+              git reset --hard "origin/main"
+            fi
+
+            printf '%s\n' "${ENV_VARS}" > .env
+            printf '%s\n' "SPRING_PROFILES_ACTIVE=prod" >> .env
+
+            LOWER_REPO="$(echo "${GH_REPO}" | tr '[:upper:]' '[:lower:]')"
+            printf '%s\n' "APP_IMAGE_NAME=ghcr.io/${LOWER_REPO}:latest" >> .env
+
+            echo "Cleaning up unused docker data to free space..."
+            docker system prune -af || true
+
+            compose pull
+            compose up -d
+
+            echo "====== CONTAINER STATUS ======"
+            compose ps
+            echo "=============================="
+
+            APP_PORT="$(awk -F= '/^APP_PORT_HOST=/{gsub(/[[:space:]]/,"",$2);print $2}' .env | tail -n 1)"
+            if [ -z "$APP_PORT" ]; then 
+                APP_PORT="8080" 
+            fi
+            echo "APP_PORT=${APP_PORT}"
+
+            echo "Waiting for service to start..."
+
+            HEALTH_URL_1="http://127.0.0.1:${APP_PORT}/health"
+            HEALTH_URL_2="http://127.0.0.1:${APP_PORT}/actuator/health"
+
+            for i in {1..12}; do
+              CODE1="$(curl -o /dev/null -s -w "%{http_code}" "${HEALTH_URL_1}" || echo 000)"
+              CODE2="$(curl -o /dev/null -s -w "%{http_code}" "${HEALTH_URL_2}" || echo 000)"
+
+              if [ "${CODE1}" = "200" ]; then
+                echo "Health check passed! (${HEALTH_URL_1})"
+                exit 0
+              fi
+              if [ "${CODE2}" = "200" ]; then
+                echo "Health check passed! (${HEALTH_URL_2})"
+                exit 0
+              fi
+
+              echo "Attempt ${i}: health failed (health=${CODE1}, actuator=${CODE2}). Retrying in 10s..."
+              sleep 10
+            done
+
+            echo "Health check failed after multiple attempts."
+            echo "====== APPLICATION LOGS (tail) ======"
+            compose logs --tail=200 app || true
+            echo "====================================="
+            echo "====== FULL CONTAINER STATUS ========"
+            compose ps || true
+            echo "====================================="
+            exit 1
+          timeout: 30m
+          command_timeout: 30m
