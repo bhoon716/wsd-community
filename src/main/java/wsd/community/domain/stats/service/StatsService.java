@@ -6,6 +6,7 @@ import java.util.Objects;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import wsd.community.domain.comment.repository.CommentRepository;
@@ -22,6 +23,7 @@ public class StatsService {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
 
+    @Cacheable(value = "topWriters", key = "#limit + '-' + #days")
     public List<TopWriterResponse> getTopWriters(int limit, int days) {
         log.info("인기 작성자 조회 요청: limit={}, days={}", limit, days);
         LocalDateTime endDate = LocalDateTime.now();
@@ -46,6 +48,7 @@ public class StatsService {
         return topWriters;
     }
 
+    @Cacheable(value = "topCommenters", key = "#limit + '-' + #days")
     public List<TopCommenterResponse> getTopCommenters(int limit, int days) {
         log.info("인기 댓글 작성자 조회 요청: limit={}, days={}", limit, days);
         LocalDateTime endDate = LocalDateTime.now();
