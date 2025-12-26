@@ -78,6 +78,7 @@ API 응답은 **성공(Success)**과 **실패(Error)**에 따라 다른 규격�
 | `422 Unprocessable Entity` | 처리 불가 | 요청 내용은 맞으나 처리할 수 없음 |
 | `429 Too Many Requests` | 요청 제한 | Rate Limiting 초과 |
 | `500 Internal Server Error` | 서버 에러 | 서버 내부 로직 오류 |
+| `503 Service Unavailable` | 서비스 불가 | 서버가 일시적으로 요청을 처리할 수 없음 |
 
 ---
 
