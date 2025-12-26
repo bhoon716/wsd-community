@@ -55,16 +55,13 @@ wsd-community-backend/
 
 ### 1) 로컬 실행 (Docker Compose)
 데이터베이스와 애플리케이션을 통합 실행하는 권장 방법입니다.
+(`.env` 파일이 필요합니다.)
 
 ```bash
-# 1. 환경변수 설정
-cp .env.example .env
-
-# 2. 실행
 docker compose up -d --build
 ```
--   **서버 접속**: `http://localhost:80`
--   **Swagger UI**: `http://localhost:80/swagger-ui/index.html`
+-   **서버 접속**: [http://localhost:80](http://localhost:80)
+-   **Swagger UI**: [http://localhost:80/swagger-ui/index.html](http://localhost:80/swagger-ui/index.html)
 
 ### 2) 테스트 실행 (Testing)
 단위 테스트 및 통합 테스트를 수행하여 시스템 무결성을 검증합니다.
@@ -96,7 +93,7 @@ docker compose up -d --build
 
 #### A. Google OAuth2 (백엔드 통합)
 Spring Security OAuth2 Client를 이용한 방식입니다.
--   **접속 URL**: `http://localhost:80/oauth2/authorization/google`
+-   **접속 URL**: [http://localhost:80/oauth2/authorization/google](http://localhost:80/oauth2/authorization/google)
 -   **동작**: 접속 시 구글 로그인 창으로 리다이렉트되며, 로그인 성공 시 백엔드에서 자체 JWT(Access/Refresh)를 쿠키/헤더로 발급합니다.
 
 #### B. Firebase Auth (클라이언트 연동)
